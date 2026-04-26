@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <math.h>
+#include <stdarg.h>
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/i2c.h"
+#include "driver/gpio.h"
+#include "driver/uart.h"
 #include "esp_log.h"
 
 #define I2C_MASTER_SCL_IO 22
@@ -14,11 +18,105 @@
 #define BMP280_ADDR_2 0x77
 #define BMP280_CHIP_ID 0x58
 #define BMP280_SEA_LEVEL_PA 101325.0f
+#define BMP280_BASELINE_STABILIZATION_SAMPLES 10
 #define MPU6050_ADDR_1 0x68
 #define MPU6050_ADDR_2 0x69
 #define MPU6050_WHO_AM_I_REG 0x75
 
+#define LORA_UART_PORT UART_NUM_2
+#define LORA_UART_TX_PIN GPIO_NUM_17
+#define LORA_UART_RX_PIN GPIO_NUM_16
+#define LORA_UART_BAUD_RATE 9600
+#define LORA_UART_BUF_SIZE 512
+
 static const char *TAG = "SENSORS";
+static bool lora_ready = false;
+
+static esp_err_t lora_init(void)
+{
+    uart_config_t uart_config = {};
+    uart_config.baud_rate = LORA_UART_BAUD_RATE;
+    uart_config.data_bits = UART_DATA_8_BITS;
+    uart_config.parity = UART_PARITY_DISABLE;
+    uart_config.stop_bits = UART_STOP_BITS_1;
+    uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
+    uart_config.source_clk = UART_SCLK_DEFAULT;
+
+    esp_err_t err = uart_driver_install(LORA_UART_PORT, LORA_UART_BUF_SIZE, LORA_UART_BUF_SIZE, 0, nullptr, 0);
+    if (err != ESP_OK && err != ESP_ERR_INVALID_STATE)
+    {
+        return err;
+    }
+
+    ESP_ERROR_CHECK(uart_param_config(LORA_UART_PORT, &uart_config));
+    ESP_ERROR_CHECK(uart_set_pin(LORA_UART_PORT, LORA_UART_TX_PIN, LORA_UART_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+
+    lora_ready = true;
+    return ESP_OK;
+}
+
+static esp_err_t lora_send_text(const char *text)
+{
+    if (!lora_ready || text == nullptr)
+    {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    size_t len = strlen(text);
+    if (len == 0)
+    {
+        return ESP_OK;
+    }
+    if (len > 240)
+    {
+        len = 240;
+    }
+
+    char frame[256];
+    int frame_len = snprintf(frame, sizeof(frame), "%.*s\r\n", (int)len, text);
+    if (frame_len <= 0)
+    {
+        return ESP_FAIL;
+    }
+
+    int written = uart_write_bytes(LORA_UART_PORT, frame, frame_len);
+    if (written < 0)
+    {
+        return ESP_FAIL;
+    }
+
+    ESP_ERROR_CHECK(uart_wait_tx_done(LORA_UART_PORT, pdMS_TO_TICKS(200)));
+
+    return ESP_OK;
+}
+
+static void publish_line(const char *fmt, ...)
+{
+    char line[256];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(line, sizeof(line), fmt, args);
+    va_end(args);
+
+    ESP_LOGI(TAG, "%s", line);
+    if (lora_ready)
+    {
+        esp_err_t tx_err = lora_send_text(line);
+        if (tx_err != ESP_OK)
+        {
+            ESP_LOGW(TAG, "LoRa TX failed: %s", esp_err_to_name(tx_err));
+        }
+        else
+        {
+            ESP_LOGI(TAG, "LoRa TX OK");
+        }
+    }
+}
+
+static void log_line_serial_only(const char *line)
+{
+    ESP_LOGI(TAG, "%s", line);
+}
 
 /**
  * @brief Configure and start ESP32 I2C master peripheral.
@@ -179,15 +277,15 @@ void mpu6050_read_sensor(const mpu6050_sensor_t *sensor)
     float gy_dps = gy / 131.0;
     float gz_dps = gz / 131.0;
 
-    ESP_LOGI(TAG,
-             "%s A[g] X=%.2f Y=%.2f Z=%.2f | G[dps] X=%.2f Y=%.2f Z=%.2f",
-             sensor->name,
-             ax_g,
-             ay_g,
-             az_g,
-             gx_dps,
-             gy_dps,
-             gz_dps);
+    publish_line(
+        "%s A[g] X=%.2f Y=%.2f Z=%.2f | G[dps] X=%.2f Y=%.2f Z=%.2f",
+        sensor->name,
+        ax_g,
+        ay_g,
+        az_g,
+        gx_dps,
+        gy_dps,
+        gz_dps);
 }
 
 // ---------- BMP280 ----------
@@ -217,13 +315,15 @@ typedef struct {
     const char *name;              /**< Label used in logs. */
     bmp280_calib_data calib;       /**< Cached factory compensation coefficients. */
     int32_t t_fine;                /**< Intermediate variable required by BMP280 formulas. */
+    uint16_t baseline_samples;      /**< Number of altitude samples collected for baseline. */
+    float baseline_accumulator_m;   /**< Running sum used to average baseline altitude. */
     bool baseline_set;             /**< True when first altitude baseline was captured. */
     float baseline_altitude_m;     /**< Initial altitude used for relative altitude output. */
     bool initialized;              /**< True when sensor is detected and configured. */
 } bmp280_sensor_t;
 
-bmp280_sensor_t bmp1 = {BMP280_ADDR_1, "BMP1", {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, false, 0.0f, false};
-bmp280_sensor_t bmp2 = {BMP280_ADDR_2, "BMP2", {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, false, 0.0f, false};
+bmp280_sensor_t bmp1 = {BMP280_ADDR_1, "BMP1", {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 0, 0.0f, false, 0.0f, false};
+bmp280_sensor_t bmp2 = {BMP280_ADDR_2, "BMP2", {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 0, 0.0f, false, 0.0f, false};
 
 /**
  * @brief Read BMP280 factory calibration registers into sensor state.
@@ -293,6 +393,12 @@ void bmp280_init_sensor(bmp280_sensor_t *sensor)
 
     bmp280_read_calibration(sensor);
     i2c_write(sensor->addr, 0xF4, 0x27);
+
+    sensor->baseline_samples = 0;
+    sensor->baseline_accumulator_m = 0.0f;
+    sensor->baseline_set = false;
+    sensor->baseline_altitude_m = 0.0f;
+
     sensor->initialized = true;
 }
 
@@ -362,12 +468,26 @@ void bmp280_read_sensor(bmp280_sensor_t *sensor)
 
     if (!sensor->baseline_set)
     {
-        sensor->baseline_altitude_m = altitude_m;
+        sensor->baseline_accumulator_m += altitude_m;
+        sensor->baseline_samples++;
+
+        if (sensor->baseline_samples < BMP280_BASELINE_STABILIZATION_SAMPLES)
+        {
+            ESP_LOGI(TAG,
+                     "%s stabilizing baseline (%u/%u)",
+                     sensor->name,
+                     (unsigned int)sensor->baseline_samples,
+                     (unsigned int)BMP280_BASELINE_STABILIZATION_SAMPLES);
+            return;
+        }
+
+        sensor->baseline_altitude_m = sensor->baseline_accumulator_m / sensor->baseline_samples;
         sensor->baseline_set = true;
+        publish_line("%s baseline locked at %.2f m", sensor->name, sensor->baseline_altitude_m);
     }
 
     float relative_altitude_m = altitude_m - sensor->baseline_altitude_m;
-    ESP_LOGI(TAG, "%s Relative Altitude: %.2f m", sensor->name, relative_altitude_m);
+    publish_line("%s Relative Altitude: %.2f m", sensor->name, relative_altitude_m);
 }
 
 // ---------- MAIN ----------
@@ -379,6 +499,16 @@ void bmp280_read_sensor(bmp280_sensor_t *sensor)
 extern "C" void app_main(void)
 {
     i2c_master_init();
+
+    esp_err_t lora_err = lora_init();
+    if (lora_err == ESP_OK)
+    {
+        ESP_LOGI(TAG, "LoRa 900T20D on UART2 initialized at %d bps", LORA_UART_BAUD_RATE);
+    }
+    else
+    {
+        ESP_LOGW(TAG, "LoRa init failed, serial-only mode: %s", esp_err_to_name(lora_err));
+    }
 
     mpu6050_init_sensor(&mpu1);
     mpu6050_init_sensor(&mpu2);
@@ -392,7 +522,7 @@ extern "C" void app_main(void)
         bmp280_read_sensor(&bmp1);
         bmp280_read_sensor(&bmp2);
 
-        ESP_LOGI(TAG, "------------------------");
+        log_line_serial_only("------------------------");
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
