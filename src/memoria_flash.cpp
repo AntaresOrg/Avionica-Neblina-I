@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <stdint.h>
 #include <stdbool.h> 
-#include <SPI.h> // Biblioteca nativa para controle de hardware SPI
+#include <SPI.h> 
 
 //pinos
 const int pinoCS    = 10;
