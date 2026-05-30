@@ -2,11 +2,14 @@
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
+#include "lora.h"
+#include "flash_memory.h"
+#include "flight_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/i2c.h"
 #include "driver/gpio.h"
-#include "driver/uart.h"
+#include "esp_err.h"
 #include "esp_log.h"
 
 #define I2C_MASTER_SCL_IO 22
@@ -17,78 +20,57 @@
 #define BMP280_ADDR_1 0x76
 #define BMP280_ADDR_2 0x77
 #define BMP280_CHIP_ID 0x58
+#define BME280_CHIP_ID 0x60
 #define BMP280_SEA_LEVEL_PA 101325.0f
 #define BMP280_BASELINE_STABILIZATION_SAMPLES 10
 #define MPU6050_ADDR_1 0x68
 #define MPU6050_ADDR_2 0x69
 #define MPU6050_WHO_AM_I_REG 0x75
 
-#define LORA_UART_PORT UART_NUM_2
-#define LORA_UART_TX_PIN GPIO_NUM_17
-#define LORA_UART_RX_PIN GPIO_NUM_16
-#define LORA_UART_BAUD_RATE 9600
-#define LORA_UART_BUF_SIZE 512
-
 static const char *TAG = "SENSORS";
+
+// Set to 1 to boot into flash readback (dump CSV), 0 for normal logging.
+#define FLASH_READBACK_MODE 1
+// Set to 1 to erase the flight log region on boot BEFORE logging starts.
+// This runs only in normal logging mode (FLASH_READBACK_MODE=0).
+#define FLASH_RESET_BEFORE_READBACK 0
+
 static bool lora_ready = false;
+static bool flash_ready = false;
+static flight_log_t flight_log;
 
-static esp_err_t lora_init(void)
+static void log_line_serial_only(const char *line);
+
+static void write_line_serial_and_lora(void *ctx, const char *line)
 {
-    uart_config_t uart_config = {};
-    uart_config.baud_rate = LORA_UART_BAUD_RATE;
-    uart_config.data_bits = UART_DATA_8_BITS;
-    uart_config.parity = UART_PARITY_DISABLE;
-    uart_config.stop_bits = UART_STOP_BITS_1;
-    uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
-    uart_config.source_clk = UART_SCLK_DEFAULT;
-
-    esp_err_t err = uart_driver_install(LORA_UART_PORT, LORA_UART_BUF_SIZE, LORA_UART_BUF_SIZE, 0, nullptr, 0);
-    if (err != ESP_OK && err != ESP_ERR_INVALID_STATE)
-    {
-        return err;
-    }
-
-    ESP_ERROR_CHECK(uart_param_config(LORA_UART_PORT, &uart_config));
-    ESP_ERROR_CHECK(uart_set_pin(LORA_UART_PORT, LORA_UART_TX_PIN, LORA_UART_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-
-    lora_ready = true;
-    return ESP_OK;
+    (void)ctx;
+    log_line_serial_only(line);
+    if (lora_ready)
+        lora_send_line(line);
 }
 
-static esp_err_t lora_send_text(const char *text)
+static void dump_flight_log(void)
 {
-    if (!lora_ready || text == nullptr)
+    if (!flash_ready || !flight_log.initialized)
     {
-        return ESP_ERR_INVALID_STATE;
+        ESP_LOGW(TAG, "Flash/log not ready; cannot read back");
+        return;
     }
 
-    size_t len = strlen(text);
-    if (len == 0)
-    {
-        return ESP_OK;
-    }
-    if (len > 240)
-    {
-        len = 240;
-    }
-
-    char frame[256];
-    int frame_len = snprintf(frame, sizeof(frame), "%.*s\r\n", (int)len, text);
-    if (frame_len <= 0)
-    {
-        return ESP_FAIL;
-    }
-
-    int written = uart_write_bytes(LORA_UART_PORT, frame, frame_len);
-    if (written < 0)
-    {
-        return ESP_FAIL;
-    }
-
-    ESP_ERROR_CHECK(uart_wait_tx_done(LORA_UART_PORT, pdMS_TO_TICKS(200)));
-
-    return ESP_OK;
+    esp_err_t err = flight_log_dump_csv(&flight_log, write_line_serial_and_lora, NULL, true);
+    if (err != ESP_OK)
+        ESP_LOGW(TAG, "Flight log dump failed: %s", esp_err_to_name(err));
 }
+
+typedef struct {
+    bool valid;
+    float ax_g;
+    float ay_g;
+    float az_g;
+    float gx_dps;
+    float gy_dps;
+    float gz_dps;
+} mpu6050_sample_t;
 
 static void publish_line(const char *fmt, ...)
 {
@@ -101,21 +83,17 @@ static void publish_line(const char *fmt, ...)
     ESP_LOGI(TAG, "%s", line);
     if (lora_ready)
     {
-        esp_err_t tx_err = lora_send_text(line);
-        if (tx_err != ESP_OK)
-        {
-            ESP_LOGW(TAG, "LoRa TX failed: %s", esp_err_to_name(tx_err));
-        }
-        else
-        {
-            ESP_LOGI(TAG, "LoRa TX OK");
-        }
+        lora_send_line(line);
     }
 }
 
 static void log_line_serial_only(const char *line)
 {
-    ESP_LOGI(TAG, "%s", line);
+    if (!line)
+        return;
+
+    // Plain UART0 output (serial monitor friendly; no ESP_LOG prefixes).
+    printf("%s\n", line);
 }
 
 /**
@@ -247,18 +225,21 @@ float bmp280_pressure_to_altitude(float pressure_pa, float sea_level_pa)
  *
  * @param sensor Pointer to the initialized sensor descriptor.
  */
-void mpu6050_read_sensor(const mpu6050_sensor_t *sensor)
+bool mpu6050_read_sensor(const mpu6050_sensor_t *sensor, mpu6050_sample_t *out)
 {
+    if (out)
+        memset(out, 0, sizeof(*out));
+
     if (!sensor->initialized)
     {
-        return;
+        return false;
     }
 
     uint8_t d[14];
     if (i2c_read(sensor->addr, 0x3B, d, 14) != ESP_OK)
     {
         ESP_LOGW(TAG, "%s read failed", sensor->name);
-        return;
+        return false;
     }
 
     int16_t ax = (d[0] << 8) | d[1];
@@ -277,6 +258,17 @@ void mpu6050_read_sensor(const mpu6050_sensor_t *sensor)
     float gy_dps = gy / 131.0;
     float gz_dps = gz / 131.0;
 
+    if (out)
+    {
+        out->valid = true;
+        out->ax_g = ax_g;
+        out->ay_g = ay_g;
+        out->az_g = az_g;
+        out->gx_dps = gx_dps;
+        out->gy_dps = gy_dps;
+        out->gz_dps = gz_dps;
+    }
+
     publish_line(
         "%s A[g] X=%.2f Y=%.2f Z=%.2f | G[dps] X=%.2f Y=%.2f Z=%.2f",
         sensor->name,
@@ -286,6 +278,8 @@ void mpu6050_read_sensor(const mpu6050_sensor_t *sensor)
         gx_dps,
         gy_dps,
         gz_dps);
+
+    return true;
 }
 
 // ---------- BMP280 ----------
@@ -351,10 +345,10 @@ void bmp280_read_calibration(bmp280_sensor_t *sensor)
 }
 
 /**
- * @brief Validate BMP280 identity using chip ID register.
+ * @brief Validate BMP/BME280 identity using chip ID register.
  *
  * @param sensor Pointer to target BMP280 descriptor.
- * @return true if chip ID matches BMP280.
+ * @return true if chip ID matches BMP280 (0x58) or BME280 (0x60).
  * @return false if the read fails or chip ID is unexpected.
  */
 bool bmp280_check_chip_id(const bmp280_sensor_t *sensor)
@@ -366,7 +360,7 @@ bool bmp280_check_chip_id(const bmp280_sensor_t *sensor)
         return false;
     }
 
-    if (chip_id != BMP280_CHIP_ID)
+    if (chip_id != BMP280_CHIP_ID && chip_id != BME280_CHIP_ID)
     {
         ESP_LOGE(TAG, "%s unexpected chip ID: 0x%02X", sensor->name, chip_id);
         return false;
@@ -411,18 +405,21 @@ void bmp280_init_sensor(bmp280_sensor_t *sensor)
  *
  * @param sensor Pointer to initialized BMP280 descriptor.
  */
-void bmp280_read_sensor(bmp280_sensor_t *sensor)
+bool bmp280_read_sensor(bmp280_sensor_t *sensor, float *out_relative_altitude_m)
 {
+    if (out_relative_altitude_m)
+        *out_relative_altitude_m = NAN;
+
     if (!sensor->initialized)
     {
-        return;
+        return false;
     }
 
     uint8_t d[6];
     if (i2c_read(sensor->addr, 0xF7, d, 6) != ESP_OK)
     {
         ESP_LOGW(TAG, "%s read failed", sensor->name);
-        return;
+        return false;
     }
 
     int32_t adc_p = (d[0] << 12) | (d[1] << 4) | (d[2] >> 4);
@@ -461,7 +458,7 @@ void bmp280_read_sensor(bmp280_sensor_t *sensor)
     if (P <= 0.0f)
     {
         ESP_LOGW(TAG, "%s invalid pressure for altitude calculation", sensor->name);
-        return;
+        return false;
     }
 
     float altitude_m = bmp280_pressure_to_altitude(P, BMP280_SEA_LEVEL_PA);
@@ -478,7 +475,7 @@ void bmp280_read_sensor(bmp280_sensor_t *sensor)
                      sensor->name,
                      (unsigned int)sensor->baseline_samples,
                      (unsigned int)BMP280_BASELINE_STABILIZATION_SAMPLES);
-            return;
+            return false;
         }
 
         sensor->baseline_altitude_m = sensor->baseline_accumulator_m / sensor->baseline_samples;
@@ -488,6 +485,11 @@ void bmp280_read_sensor(bmp280_sensor_t *sensor)
 
     float relative_altitude_m = altitude_m - sensor->baseline_altitude_m;
     publish_line("%s Relative Altitude: %.2f m", sensor->name, relative_altitude_m);
+
+    if (out_relative_altitude_m)
+        *out_relative_altitude_m = relative_altitude_m;
+
+    return true;
 }
 
 // ---------- MAIN ----------
@@ -498,16 +500,70 @@ void bmp280_read_sensor(bmp280_sensor_t *sensor)
  */
 extern "C" void app_main(void)
 {
+    // Make sure CSV / line output appears immediately on UART0.
+    setvbuf(stdout, NULL, _IONBF, 0);
+
     i2c_master_init();
 
-    esp_err_t lora_err = lora_init();
-    if (lora_err == ESP_OK)
-    {
-        ESP_LOGI(TAG, "LoRa 900T20D on UART2 initialized at %d bps", LORA_UART_BAUD_RATE);
-    }
+    lora_ready = lora_init();
+    if (lora_ready)
+        ESP_LOGI(TAG, "LoRa initialized");
     else
+        ESP_LOGW(TAG, "LoRa init failed, serial-only mode");
+
+    flash_memory_config_t flash_cfg = {
+        .host = SPI3_HOST,
+        .mosi_io_num = GPIO_NUM_23,
+        .miso_io_num = GPIO_NUM_19,
+        .sclk_io_num = GPIO_NUM_18,
+        .cs_io_num = GPIO_NUM_5,
+        .clock_speed_hz = 8000000,
+    };
+
+    esp_err_t flash_err = flash_memory_init(&flash_cfg);
+    flash_ready = (flash_err == ESP_OK);
+    if (flash_ready)
+        ESP_LOGI(TAG, "External SPI flash initialized");
+    else
+        ESP_LOGW(TAG, "External SPI flash init failed: %s", esp_err_to_name(flash_err));
+
+    if (flash_ready)
     {
-        ESP_LOGW(TAG, "LoRa init failed, serial-only mode: %s", esp_err_to_name(lora_err));
+        flight_log_config_t log_cfg = {
+            .base_address = 0x000000,
+            .size_bytes = 8 * 1024 * 1024,
+        };
+
+        esp_err_t log_err = flight_log_init(&flight_log, &log_cfg);
+        if (log_err == ESP_OK)
+            ESP_LOGI(TAG, "Flight log ready (%u records)", (unsigned int)flight_log_count(&flight_log));
+        else
+            ESP_LOGW(TAG, "Flight log init failed: %s", esp_err_to_name(log_err));
+    }
+
+    if (FLASH_READBACK_MODE)
+    {
+        ESP_LOGI(TAG, "READBACK MODE: FLASH_READBACK_MODE=1");
+        dump_flight_log();
+        while (1)
+            vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+
+    if (FLASH_RESET_BEFORE_READBACK && flash_ready && flight_log.initialized)
+    {
+        // Full erase of a multi-megabyte region at boot can take a long time and
+        // trip the task watchdog. Instead, reset the write pointer and erase the
+        // first sector now; remaining sectors will be erased on-demand as logging
+        // reaches them.
+        ESP_LOGW(TAG, "Resetting flight log before logging (FLASH_RESET_BEFORE_READBACK=1)");
+
+        flight_log.write_offset = 0;
+
+        esp_err_t erase_err = flash_memory_erase_4k(flight_log.cfg.base_address);
+        if (erase_err != ESP_OK)
+            ESP_LOGW(TAG, "Flight log first-sector erase failed: %s", esp_err_to_name(erase_err));
+        else
+            ESP_LOGI(TAG, "Flight log reset (starting from record 0)");
     }
 
     mpu6050_init_sensor(&mpu1);
@@ -515,14 +571,63 @@ extern "C" void app_main(void)
     bmp280_init_sensor(&bmp1);
     bmp280_init_sensor(&bmp2);
 
+    // In normal logging mode, print a CSV header once so a serial capture can be
+    // saved directly as a CSV file.
+    {
+        char header[256];
+        if (flight_log_format_csv_header(header, sizeof(header)) == ESP_OK)
+            log_line_serial_only(header);
+    }
+
     while (1)
     {
-        mpu6050_read_sensor(&mpu1);
-        mpu6050_read_sensor(&mpu2);
-        bmp280_read_sensor(&bmp1);
-        bmp280_read_sensor(&bmp2);
+        mpu6050_sample_t m1;
+        mpu6050_sample_t m2;
+        float b1_alt = NAN;
+        float b2_alt = NAN;
 
-        log_line_serial_only("------------------------");
+        mpu6050_read_sensor(&mpu1, &m1);
+        mpu6050_read_sensor(&mpu2, &m2);
+        bmp280_read_sensor(&bmp1, &b1_alt);
+        bmp280_read_sensor(&bmp2, &b2_alt);
+
+        // Always build a timestamped sample, even if sensors failed.
+        // Missing values are stored/logged as NAN.
+        flight_sample_t s = {
+            .time_ms = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS),
+
+            .bmp1_relative_altitude_m = b1_alt,
+            .bmp2_relative_altitude_m = b2_alt,
+
+            .mpu1_ax_g = m1.valid ? m1.ax_g : NAN,
+            .mpu1_ay_g = m1.valid ? m1.ay_g : NAN,
+            .mpu1_az_g = m1.valid ? m1.az_g : NAN,
+            .mpu1_gx_dps = m1.valid ? m1.gx_dps : NAN,
+            .mpu1_gy_dps = m1.valid ? m1.gy_dps : NAN,
+            .mpu1_gz_dps = m1.valid ? m1.gz_dps : NAN,
+
+            .mpu2_ax_g = m2.valid ? m2.ax_g : NAN,
+            .mpu2_ay_g = m2.valid ? m2.ay_g : NAN,
+            .mpu2_az_g = m2.valid ? m2.az_g : NAN,
+            .mpu2_gx_dps = m2.valid ? m2.gx_dps : NAN,
+            .mpu2_gy_dps = m2.valid ? m2.gy_dps : NAN,
+            .mpu2_gz_dps = m2.valid ? m2.gz_dps : NAN,
+        };
+
+        // Always emit the timestamped line to serial (and LoRa if ready).
+        {
+            char line[256];
+            if (flight_log_format_sample_csv(&s, line, sizeof(line)) == ESP_OK)
+                write_line_serial_and_lora(NULL, line);
+        }
+
+        // And always attempt to save the timestamped sample to flash when available.
+        if (flash_ready && flight_log.initialized)
+        {
+            esp_err_t append_err = flight_log_append(&flight_log, &s);
+            if (append_err != ESP_OK)
+                ESP_LOGW(TAG, "Flight log append failed: %s", esp_err_to_name(append_err));
+        }
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
