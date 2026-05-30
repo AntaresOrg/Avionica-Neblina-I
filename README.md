@@ -29,7 +29,7 @@ Atualmente os requisitos de código e se seu status de completion na plataforma 
 
 ✅ Flash Memory W25Q128
 
-⛔ Rõtina de Võo
+⛔ Rôtina de Võo
 
 ⛔ Recuperação
 
