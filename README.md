@@ -20,9 +20,16 @@ Além disso o código foi escrito usando a extensão PlatformIO no VSCode, na pl
 Atualmente os requisitos de código e se seu status de completion na plataforma esp-idf são:
 
 ✅ BMPs
+
 ✅ MPUs
+
 ⚠️ LoRa E220 900T30D
+
 ⛔ GPS Neo-6M
+
 ✅ Flash Memory W25Q128
+
 ⛔ Rõtina de Võo
+
 ⛔ Recuperação
+
