@@ -25,11 +25,11 @@ Atualmente os requisitos de código e se seu status de completion na plataforma 
 
 ⚠️ LoRa E220 900T30D
 
-⛔ GPS Neo-6M
+✅ GPS Neo-6M
 
 ✅ Flash Memory W25Q128
 
-⛔ Rôtina de Võo
+✅ Rôtina de Võo
 
-⛔ Recuperação
+✅ Recuperação
 
