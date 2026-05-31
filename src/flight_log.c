@@ -7,7 +7,7 @@
 #include "flash_memory.h"
 
 #define FLIGHT_LOG_MAGIC 0x474F4C46u /* 'FLOG' */
-#define FLIGHT_LOG_VERSION 1u
+#define FLIGHT_LOG_VERSION 5u
 
 typedef struct __attribute__((packed)) {
     uint32_t magic;
@@ -33,10 +33,18 @@ typedef struct __attribute__((packed)) {
     float mpu2_gy_dps;
     float mpu2_gz_dps;
 
+    float gps_lat_deg;
+    float gps_lon_deg;
+    float gps_altitude_m;
+    float gps_satellites;
+
     uint32_t crc32;
 } flight_log_record_t;
 
-_Static_assert(sizeof(flight_log_record_t) == 72, "flight_log_record_t must be 72 bytes");
+_Static_assert(
+    sizeof(flight_log_record_t) ==
+    offsetof(flight_log_record_t, crc32) + sizeof(uint32_t),
+    "Unexpected flight_log_record_t size");
 
 static uint32_t crc32_ieee(const void *data, size_t len)
 {
@@ -198,6 +206,11 @@ esp_err_t flight_log_append(flight_log_t *log, const flight_sample_t *sample)
     rec.mpu2_gy_dps = sample->mpu2_gy_dps;
     rec.mpu2_gz_dps = sample->mpu2_gz_dps;
 
+    rec.gps_lat_deg = sample->gps_lat_deg;
+    rec.gps_lon_deg = sample->gps_lon_deg;
+    rec.gps_altitude_m = sample->gps_altitude_m;
+    rec.gps_satellites = sample->gps_satellites;
+
     rec.crc32 = crc32_ieee(&rec, offsetof(flight_log_record_t, crc32));
 
     esp_err_t err = flash_memory_write(log->cfg.base_address + log->write_offset, &rec, sizeof(rec));
@@ -245,6 +258,11 @@ esp_err_t flight_log_read(const flight_log_t *log, uint32_t index, flight_sample
     out->mpu2_gy_dps = rec.mpu2_gy_dps;
     out->mpu2_gz_dps = rec.mpu2_gz_dps;
 
+    out->gps_lat_deg = rec.gps_lat_deg;
+    out->gps_lon_deg = rec.gps_lon_deg;
+    out->gps_altitude_m = rec.gps_altitude_m;
+    out->gps_satellites = rec.gps_satellites;
+
     return ESP_OK;
 }
 
@@ -252,7 +270,8 @@ static const char *flight_log_csv_header_line(void)
 {
     return "time_ms,bmp1_rel_alt_m,bmp2_rel_alt_m,"
            "mpu1_ax_g,mpu1_ay_g,mpu1_az_g,mpu1_gx_dps,mpu1_gy_dps,mpu1_gz_dps,"
-           "mpu2_ax_g,mpu2_ay_g,mpu2_az_g,mpu2_gx_dps,mpu2_gy_dps,mpu2_gz_dps";
+           "mpu2_ax_g,mpu2_ay_g,mpu2_az_g,mpu2_gx_dps,mpu2_gy_dps,mpu2_gz_dps,"
+           "gps_lat_deg,gps_lon_deg,gps_alt_m,gps_sat";
 }
 
 esp_err_t flight_log_format_csv_header(char *out, size_t out_len)
@@ -275,7 +294,7 @@ esp_err_t flight_log_format_sample_csv(const flight_sample_t *sample, char *out,
     int n = snprintf(
         out,
         out_len,
-        "%u,%.2f,%.2f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f",
+        "%u,%.2f,%.2f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.6f,%.6f,%.1f,%.0f",
         (unsigned int)sample->time_ms,
         sample->bmp1_relative_altitude_m,
         sample->bmp2_relative_altitude_m,
@@ -290,7 +309,11 @@ esp_err_t flight_log_format_sample_csv(const flight_sample_t *sample, char *out,
         sample->mpu2_az_g,
         sample->mpu2_gx_dps,
         sample->mpu2_gy_dps,
-        sample->mpu2_gz_dps);
+        sample->mpu2_gz_dps,
+        sample->gps_lat_deg,
+        sample->gps_lon_deg,
+        sample->gps_altitude_m,
+        sample->gps_satellites);
 
     if (n < 0 || (size_t)n >= out_len)
         return ESP_ERR_NO_MEM;
@@ -308,7 +331,7 @@ esp_err_t flight_log_dump_csv(const flight_log_t *log,
     if (!write_line)
         return ESP_ERR_INVALID_ARG;
 
-    char line[256];
+    char line[384];
 
     if (include_header)
     {

@@ -11,6 +11,7 @@
 #include "driver/gpio.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "neo-6m.h"
 
 #define I2C_MASTER_SCL_IO 22
 #define I2C_MASTER_SDA_IO 21
@@ -30,10 +31,10 @@
 static const char *TAG = "SENSORS";
 
 // Set to 1 to boot into flash readback (dump CSV), 0 for normal logging.
-#define FLASH_READBACK_MODE 1
+#define FLASH_READBACK_MODE 0
 // Set to 1 to erase the flight log region on boot BEFORE logging starts.
 // This runs only in normal logging mode (FLASH_READBACK_MODE=0).
-#define FLASH_RESET_BEFORE_READBACK 0
+#define FLASH_RESET_BEFORE_READBACK 1
 
 static bool lora_ready = false;
 static bool flash_ready = false;
@@ -520,6 +521,21 @@ extern "C" void app_main(void)
         .clock_speed_hz = 8000000,
     };
 
+    neo6m_config_t gps_cfg = {
+        .uart_num = UART_NUM_1,
+        .baud_rate = 9600,
+        // Neo-6M UART1 wiring (module header: VCC RX TX GND):
+        // - GPS TX -> ESP RX (GPIO14)
+        // - GPS RX -> ESP TX (GPIO27)
+        // - GPS VCC -> 5V/VIN, GPS GND -> GND
+        .tx_pin = GPIO_NUM_27,
+        .rx_pin = GPIO_NUM_14,
+        .rx_buffer_size = 2048,
+        .max_fix_age_ms = 2000,
+    };
+
+    ESP_ERROR_CHECK(neo6m_setup(&gps_cfg));
+
     esp_err_t flash_err = flash_memory_init(&flash_cfg);
     flash_ready = (flash_err == ESP_OK);
     if (flash_ready)
@@ -574,13 +590,14 @@ extern "C" void app_main(void)
     // In normal logging mode, print a CSV header once so a serial capture can be
     // saved directly as a CSV file.
     {
-        char header[256];
+        char header[384];
         if (flight_log_format_csv_header(header, sizeof(header)) == ESP_OK)
             log_line_serial_only(header);
     }
 
     while (1)
     {
+        neo6m_loop();
         mpu6050_sample_t m1;
         mpu6050_sample_t m2;
         float b1_alt = NAN;
@@ -591,32 +608,58 @@ extern "C" void app_main(void)
         bmp280_read_sensor(&bmp1, &b1_alt);
         bmp280_read_sensor(&bmp2, &b2_alt);
 
+        neo6m_fix_t gps_fix;
+        neo6m_get_fix(&gps_fix);
+
+        float gps_lat = NAN;
+        float gps_lon = NAN;
+        float gps_alt = NAN;
+        float gps_sat = NAN;
+
+        if (gps_fix.location_valid &&
+            gps_fix.location_age_ms < gps_cfg.max_fix_age_ms)
+        {
+            gps_lat = (float)gps_fix.lat_deg;
+            gps_lon = (float)gps_fix.lon_deg;
+        }
+
+        if (gps_fix.altitude_valid)
+            gps_alt = gps_fix.altitude_m;
+
+        if (gps_fix.satellites_valid)
+            gps_sat = (float)gps_fix.satellites;
+
         // Always build a timestamped sample, even if sensors failed.
         // Missing values are stored/logged as NAN.
         flight_sample_t s = {
-            .time_ms = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS),
+        .time_ms = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS),
 
-            .bmp1_relative_altitude_m = b1_alt,
-            .bmp2_relative_altitude_m = b2_alt,
+        .bmp1_relative_altitude_m = b1_alt,
+        .bmp2_relative_altitude_m = b2_alt,
 
-            .mpu1_ax_g = m1.valid ? m1.ax_g : NAN,
-            .mpu1_ay_g = m1.valid ? m1.ay_g : NAN,
-            .mpu1_az_g = m1.valid ? m1.az_g : NAN,
-            .mpu1_gx_dps = m1.valid ? m1.gx_dps : NAN,
-            .mpu1_gy_dps = m1.valid ? m1.gy_dps : NAN,
-            .mpu1_gz_dps = m1.valid ? m1.gz_dps : NAN,
+        .mpu1_ax_g = m1.valid ? m1.ax_g : NAN,
+        .mpu1_ay_g = m1.valid ? m1.ay_g : NAN,
+        .mpu1_az_g = m1.valid ? m1.az_g : NAN,
+        .mpu1_gx_dps = m1.valid ? m1.gx_dps : NAN,
+        .mpu1_gy_dps = m1.valid ? m1.gy_dps : NAN,
+        .mpu1_gz_dps = m1.valid ? m1.gz_dps : NAN,
 
-            .mpu2_ax_g = m2.valid ? m2.ax_g : NAN,
-            .mpu2_ay_g = m2.valid ? m2.ay_g : NAN,
-            .mpu2_az_g = m2.valid ? m2.az_g : NAN,
-            .mpu2_gx_dps = m2.valid ? m2.gx_dps : NAN,
-            .mpu2_gy_dps = m2.valid ? m2.gy_dps : NAN,
-            .mpu2_gz_dps = m2.valid ? m2.gz_dps : NAN,
-        };
+        .mpu2_ax_g = m2.valid ? m2.ax_g : NAN,
+        .mpu2_ay_g = m2.valid ? m2.ay_g : NAN,
+        .mpu2_az_g = m2.valid ? m2.az_g : NAN,
+        .mpu2_gx_dps = m2.valid ? m2.gx_dps : NAN,
+        .mpu2_gy_dps = m2.valid ? m2.gy_dps : NAN,
+        .mpu2_gz_dps = m2.valid ? m2.gz_dps : NAN,
+
+        .gps_lat_deg = gps_lat,
+        .gps_lon_deg = gps_lon,
+        .gps_altitude_m = gps_alt,
+        .gps_satellites = gps_sat,
+    };
 
         // Always emit the timestamped line to serial (and LoRa if ready).
         {
-            char line[256];
+            char line[384];
             if (flight_log_format_sample_csv(&s, line, sizeof(line)) == ESP_OK)
                 write_line_serial_and_lora(NULL, line);
         }

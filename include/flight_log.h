@@ -29,6 +29,13 @@ typedef struct {
     float mpu2_gx_dps;
     float mpu2_gy_dps;
     float mpu2_gz_dps;
+
+    // GPS (Neo-6M) fields. Use NAN when invalid/unavailable.
+    float gps_lat_deg;
+    float gps_lon_deg;
+    float gps_altitude_m;
+    float gps_satellites;
+
 } flight_sample_t;
 
 typedef struct {
