@@ -1,0 +1,611 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineSystem.cmake:205 (message)"
+      - "CMakeLists.txt"
+    message: |
+      The system is: Linux - 6.12.63+deb13-amd64 - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: /usr/bin/avr-gcc 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+      
+      The C compiler identification is GNU, found in:
+        /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/3.31.6/CompilerIdC/a.out
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /usr/bin/avr-g++ 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is GNU, found in:
+        /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/3.31.6/CompilerIdCXX/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-w5lM9Z"
+      binary: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-w5lM9Z"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-w5lM9Z'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_0666f/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_0666f.dir/build.make CMakeFiles/cmTC_0666f.dir/build
+        gmake[1]: Entering directory '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-w5lM9Z'
+        Building C object CMakeFiles/cmTC_0666f.dir/CMakeCCompilerABI.c.o
+        /usr/bin/avr-gcc   -v -o CMakeFiles/cmTC_0666f.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c
+        Using built-in specs.
+        Reading specs from /usr/lib/gcc/avr/14.2.0/device-specs/specs-avr2
+        COLLECT_GCC=/usr/bin/avr-gcc
+        Target: avr
+        Configured with: ../src/configure -v --enable-languages=c,c++,rust --prefix=/usr/lib --infodir=/usr/share/info --mandir=/usr/share/man --bindir=/usr/bin --libexecdir=/usr/lib --libdir=/usr/lib --enable-shared --with-system-zlib --enable-long-long --enable-nls --without-included-gettext --disable-libssp --disable-libcc1 --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=avr --enable-host-pie ASFLAGS= ASFLAGS_FOR_BUILD= CFLAGS='-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CFLAGS_FOR_BUILD=-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' CPPFLAGS='-Wdate-time -D_FORTIFY_SOURCE=2' 'CPPFLAGS_FOR_BUILD=-Wdate-time -D_FORTIFY_SOURCE=2' CXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' DFLAGS=-frelease DFLAGS_FOR_BUILD=-frelease FCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' FFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' LDFLAGS='-Wl,-z,relro -Wl,-z,now' 'LDFLAGS_FOR_BUILD=-Wl,-z,relro -Wl,-z,now' OBJCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' OBJCXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection'
+        Thread model: single
+        Supported LTO compression algorithms: zlib
+        gcc version 14.2.0 (GCC) 
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_0666f.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_0666f.dir/'
+         /usr/lib/gcc/avr/14.2.0/cc1 -quiet -v /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c -mn-flash=6 -mskip-bug -quiet -dumpdir CMakeFiles/cmTC_0666f.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mdouble=32 -mlong-double=64 -version -o /tmp/ccTmE52r.s
+        GNU C17 (GCC) version 14.2.0 (avr)
+        	compiled by GNU C version 14.2.0, GMP version 6.3.0, MPFR version 4.2.1, MPC version 1.3.1, isl version none
+        warning: MPFR header version 4.2.1 differs from library version 4.2.2.
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/usr/lib/gcc/avr/14.2.0/../../../avr/sys-include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/lib/gcc/avr/14.2.0/include
+         /usr/lib/gcc/avr/14.2.0/include-fixed
+         /usr/lib/gcc/avr/14.2.0/../../../avr/include
+        End of search list.
+        Compiler executable checksum: 96b695ed744c081991ff1c63ee5470a9
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_0666f.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_0666f.dir/'
+         /usr/lib/gcc/avr/14.2.0/../../../avr/bin/as -mmcu=avr2 -mgcc-isr -o CMakeFiles/cmTC_0666f.dir/CMakeCCompilerABI.c.o /tmp/ccTmE52r.s
+        COMPILER_PATH=/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/:/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/:/usr/lib/gcc/avr/14.2.0/../../../avr/bin/
+        LIBRARY_PATH=/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/14.2.0/../../../avr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_0666f.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_0666f.dir/CMakeCCompilerABI.c.'
+        Linking C executable cmTC_0666f
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0666f.dir/link.txt --verbose=1
+        Using built-in specs.
+        Reading specs from /usr/lib/gcc/avr/14.2.0/device-specs/specs-avr2
+        COLLECT_GCC=/usr/bin/avr-gcc
+        COLLECT_LTO_WRAPPER=/usr/lib/gcc/avr/14.2.0/lto-wrapper
+        avr-gcc: error: unrecognized command-line option '-rdynamic'
+        Target: avr
+        Configured with: ../src/configure -v --enable-languages=c,c++,rust --prefix=/usr/lib --infodir=/usr/share/info --mandir=/usr/share/man --bindir=/usr/bin --libexecdir=/usr/lib --libdir=/usr/lib --enable-shared --with-system-zlib --enable-long-long --enable-nls --without-included-gettext --disable-libssp --disable-libcc1 --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=avr --enable-host-pie ASFLAGS= ASFLAGS_FOR_BUILD= CFLAGS='-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CFLAGS_FOR_BUILD=-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' CPPFLAGS='-Wdate-time -D_FORTIFY_SOURCE=2' 'CPPFLAGS_FOR_BUILD=-Wdate-time -D_FORTIFY_SOURCE=2' CXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' DFLAGS=-frelease DFLAGS_FOR_BUILD=-frelease FCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' FFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' LDFLAGS='-Wl,-z,relro -Wl,-z,now' 'LDFLAGS_FOR_BUILD=-Wl,-z,relro -Wl,-z,now' OBJCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' OBJCXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection'
+        Thread model: single
+        Supported LTO compression algorithms: zlib
+        gcc version 14.2.0 (GCC) 
+        /usr/bin/avr-gcc  -v -Wl,-v -rdynamic CMakeFiles/cmTC_0666f.dir/CMakeCCompilerABI.c.o -o cmTC_0666f
+        gmake[1]: *** [CMakeFiles/cmTC_0666f.dir/build.make:102: cmTC_0666f] Error 1
+        gmake[1]: Leaving directory '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-w5lM9Z'
+        gmake: *** [Makefile:134: cmTC_0666f/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:56 (try_compile)"
+      - "CMakeLists.txt"
+    checks:
+      - "Check for working C compiler: /usr/bin/avr-gcc"
+    directories:
+      source: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-LdTEcT"
+      binary: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-LdTEcT"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_COMPILER_WORKS"
+      cached: true
+      stdout: |
+        Change Dir: '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-LdTEcT'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_f1f52/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_f1f52.dir/build.make CMakeFiles/cmTC_f1f52.dir/build
+        gmake[1]: Entrando no diretório '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-LdTEcT'
+        
+        Building C object CMakeFiles/cmTC_f1f52.dir/testCCompiler.c.o
+        /usr/bin/avr-gcc    -o CMakeFiles/cmTC_f1f52.dir/testCCompiler.c.o -c /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-LdTEcT/testCCompiler.c
+        Linking C executable cmTC_f1f52
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f1f52.dir/link.txt --verbose=1
+        avr-gcc: error: unrecognized command-line option ‘-rdynamic’
+        /usr/bin/avr-gcc -rdynamic CMakeFiles/cmTC_f1f52.dir/testCCompiler.c.o -o cmTC_f1f52
+        gmake[1]: *** [CMakeFiles/cmTC_f1f52.dir/build.make:102: cmTC_f1f52] Error 1
+        gmake[1]: Saindo do diretório '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-LdTEcT'
+        
+        gmake: *** [Makefile:134: cmTC_f1f52/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: /usr/bin/avr-gcc 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+      
+      The C compiler identification is GNU, found in:
+        /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/3.31.6/CompilerIdC/a.out
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /usr/bin/avr-g++ 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is GNU, found in:
+        /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/3.31.6/CompilerIdCXX/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-Z8E3Cz"
+      binary: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-Z8E3Cz"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-Z8E3Cz'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_7ef1b/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_7ef1b.dir/build.make CMakeFiles/cmTC_7ef1b.dir/build
+        gmake[1]: Entering directory '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-Z8E3Cz'
+        Building C object CMakeFiles/cmTC_7ef1b.dir/CMakeCCompilerABI.c.o
+        /usr/bin/avr-gcc   -v -o CMakeFiles/cmTC_7ef1b.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c
+        Using built-in specs.
+        Reading specs from /usr/lib/gcc/avr/14.2.0/device-specs/specs-avr2
+        COLLECT_GCC=/usr/bin/avr-gcc
+        Target: avr
+        Configured with: ../src/configure -v --enable-languages=c,c++,rust --prefix=/usr/lib --infodir=/usr/share/info --mandir=/usr/share/man --bindir=/usr/bin --libexecdir=/usr/lib --libdir=/usr/lib --enable-shared --with-system-zlib --enable-long-long --enable-nls --without-included-gettext --disable-libssp --disable-libcc1 --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=avr --enable-host-pie ASFLAGS= ASFLAGS_FOR_BUILD= CFLAGS='-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CFLAGS_FOR_BUILD=-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' CPPFLAGS='-Wdate-time -D_FORTIFY_SOURCE=2' 'CPPFLAGS_FOR_BUILD=-Wdate-time -D_FORTIFY_SOURCE=2' CXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' DFLAGS=-frelease DFLAGS_FOR_BUILD=-frelease FCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' FFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' LDFLAGS='-Wl,-z,relro -Wl,-z,now' 'LDFLAGS_FOR_BUILD=-Wl,-z,relro -Wl,-z,now' OBJCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' OBJCXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection'
+        Thread model: single
+        Supported LTO compression algorithms: zlib
+        gcc version 14.2.0 (GCC) 
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_7ef1b.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_7ef1b.dir/'
+         /usr/lib/gcc/avr/14.2.0/cc1 -quiet -v /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c -mn-flash=6 -mskip-bug -quiet -dumpdir CMakeFiles/cmTC_7ef1b.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mdouble=32 -mlong-double=64 -version -o /tmp/cciHxGTB.s
+        GNU C17 (GCC) version 14.2.0 (avr)
+        	compiled by GNU C version 14.2.0, GMP version 6.3.0, MPFR version 4.2.1, MPC version 1.3.1, isl version none
+        warning: MPFR header version 4.2.1 differs from library version 4.2.2.
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/usr/lib/gcc/avr/14.2.0/../../../avr/sys-include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/lib/gcc/avr/14.2.0/include
+         /usr/lib/gcc/avr/14.2.0/include-fixed
+         /usr/lib/gcc/avr/14.2.0/../../../avr/include
+        End of search list.
+        Compiler executable checksum: 96b695ed744c081991ff1c63ee5470a9
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_7ef1b.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_7ef1b.dir/'
+         /usr/lib/gcc/avr/14.2.0/../../../avr/bin/as -mmcu=avr2 -mgcc-isr -o CMakeFiles/cmTC_7ef1b.dir/CMakeCCompilerABI.c.o /tmp/cciHxGTB.s
+        COMPILER_PATH=/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/:/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/:/usr/lib/gcc/avr/14.2.0/../../../avr/bin/
+        LIBRARY_PATH=/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/14.2.0/../../../avr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_7ef1b.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_7ef1b.dir/CMakeCCompilerABI.c.'
+        Linking C executable cmTC_7ef1b
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7ef1b.dir/link.txt --verbose=1
+        Using built-in specs.
+        Reading specs from /usr/lib/gcc/avr/14.2.0/device-specs/specs-avr2
+        COLLECT_GCC=/usr/bin/avr-gcc
+        COLLECT_LTO_WRAPPER=/usr/lib/gcc/avr/14.2.0/lto-wrapper
+        avr-gcc: error: unrecognized command-line option '-rdynamic'
+        Target: avr
+        Configured with: ../src/configure -v --enable-languages=c,c++,rust --prefix=/usr/lib --infodir=/usr/share/info --mandir=/usr/share/man --bindir=/usr/bin --libexecdir=/usr/lib --libdir=/usr/lib --enable-shared --with-system-zlib --enable-long-long --enable-nls --without-included-gettext --disable-libssp --disable-libcc1 --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=avr --enable-host-pie ASFLAGS= ASFLAGS_FOR_BUILD= CFLAGS='-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CFLAGS_FOR_BUILD=-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' CPPFLAGS='-Wdate-time -D_FORTIFY_SOURCE=2' 'CPPFLAGS_FOR_BUILD=-Wdate-time -D_FORTIFY_SOURCE=2' CXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' DFLAGS=-frelease DFLAGS_FOR_BUILD=-frelease FCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' FFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' LDFLAGS='-Wl,-z,relro -Wl,-z,now' 'LDFLAGS_FOR_BUILD=-Wl,-z,relro -Wl,-z,now' OBJCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' OBJCXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection'
+        Thread model: single
+        Supported LTO compression algorithms: zlib
+        gcc version 14.2.0 (GCC) 
+        /usr/bin/avr-gcc  -v -Wl,-v -rdynamic CMakeFiles/cmTC_7ef1b.dir/CMakeCCompilerABI.c.o -o cmTC_7ef1b
+        gmake[1]: *** [CMakeFiles/cmTC_7ef1b.dir/build.make:102: cmTC_7ef1b] Error 1
+        gmake[1]: Leaving directory '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-Z8E3Cz'
+        gmake: *** [Makefile:134: cmTC_7ef1b/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:56 (try_compile)"
+      - "CMakeLists.txt"
+    checks:
+      - "Check for working C compiler: /usr/bin/avr-gcc"
+    directories:
+      source: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-lZVeMR"
+      binary: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-lZVeMR"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_COMPILER_WORKS"
+      cached: true
+      stdout: |
+        Change Dir: '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-lZVeMR'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_7cdd2/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_7cdd2.dir/build.make CMakeFiles/cmTC_7cdd2.dir/build
+        gmake[1]: Entrando no diretório '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-lZVeMR'
+        
+        Building C object CMakeFiles/cmTC_7cdd2.dir/testCCompiler.c.o
+        /usr/bin/avr-gcc    -o CMakeFiles/cmTC_7cdd2.dir/testCCompiler.c.o -c /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-lZVeMR/testCCompiler.c
+        Linking C executable cmTC_7cdd2
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7cdd2.dir/link.txt --verbose=1
+        avr-gcc: error: unrecognized command-line option ‘-rdynamic’
+        /usr/bin/avr-gcc -rdynamic CMakeFiles/cmTC_7cdd2.dir/testCCompiler.c.o -o cmTC_7cdd2
+        gmake[1]: *** [CMakeFiles/cmTC_7cdd2.dir/build.make:102: cmTC_7cdd2] Error 1
+        gmake[1]: Saindo do diretório '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-lZVeMR'
+        
+        gmake: *** [Makefile:134: cmTC_7cdd2/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: /usr/bin/avr-gcc 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+      
+      The C compiler identification is GNU, found in:
+        /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/3.31.6/CompilerIdC/a.out
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /usr/bin/avr-g++ 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is GNU, found in:
+        /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/3.31.6/CompilerIdCXX/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-zoUI2K"
+      binary: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-zoUI2K"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-zoUI2K'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_decd2/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_decd2.dir/build.make CMakeFiles/cmTC_decd2.dir/build
+        gmake[1]: Entering directory '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-zoUI2K'
+        Building C object CMakeFiles/cmTC_decd2.dir/CMakeCCompilerABI.c.o
+        /usr/bin/avr-gcc   -v -o CMakeFiles/cmTC_decd2.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c
+        Using built-in specs.
+        Reading specs from /usr/lib/gcc/avr/14.2.0/device-specs/specs-avr2
+        COLLECT_GCC=/usr/bin/avr-gcc
+        Target: avr
+        Configured with: ../src/configure -v --enable-languages=c,c++,rust --prefix=/usr/lib --infodir=/usr/share/info --mandir=/usr/share/man --bindir=/usr/bin --libexecdir=/usr/lib --libdir=/usr/lib --enable-shared --with-system-zlib --enable-long-long --enable-nls --without-included-gettext --disable-libssp --disable-libcc1 --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=avr --enable-host-pie ASFLAGS= ASFLAGS_FOR_BUILD= CFLAGS='-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CFLAGS_FOR_BUILD=-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' CPPFLAGS='-Wdate-time -D_FORTIFY_SOURCE=2' 'CPPFLAGS_FOR_BUILD=-Wdate-time -D_FORTIFY_SOURCE=2' CXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' DFLAGS=-frelease DFLAGS_FOR_BUILD=-frelease FCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' FFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' LDFLAGS='-Wl,-z,relro -Wl,-z,now' 'LDFLAGS_FOR_BUILD=-Wl,-z,relro -Wl,-z,now' OBJCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' OBJCXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection'
+        Thread model: single
+        Supported LTO compression algorithms: zlib
+        gcc version 14.2.0 (GCC) 
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_decd2.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_decd2.dir/'
+         /usr/lib/gcc/avr/14.2.0/cc1 -quiet -v /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c -mn-flash=6 -mskip-bug -quiet -dumpdir CMakeFiles/cmTC_decd2.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mdouble=32 -mlong-double=64 -version -o /tmp/ccD4v10n.s
+        GNU C17 (GCC) version 14.2.0 (avr)
+        	compiled by GNU C version 14.2.0, GMP version 6.3.0, MPFR version 4.2.1, MPC version 1.3.1, isl version none
+        warning: MPFR header version 4.2.1 differs from library version 4.2.2.
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/usr/lib/gcc/avr/14.2.0/../../../avr/sys-include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/lib/gcc/avr/14.2.0/include
+         /usr/lib/gcc/avr/14.2.0/include-fixed
+         /usr/lib/gcc/avr/14.2.0/../../../avr/include
+        End of search list.
+        Compiler executable checksum: 96b695ed744c081991ff1c63ee5470a9
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_decd2.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_decd2.dir/'
+         /usr/lib/gcc/avr/14.2.0/../../../avr/bin/as -mmcu=avr2 -mgcc-isr -o CMakeFiles/cmTC_decd2.dir/CMakeCCompilerABI.c.o /tmp/ccD4v10n.s
+        COMPILER_PATH=/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/:/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/:/usr/lib/gcc/avr/14.2.0/../../../avr/bin/
+        LIBRARY_PATH=/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/14.2.0/../../../avr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_decd2.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_decd2.dir/CMakeCCompilerABI.c.'
+        Linking C executable cmTC_decd2
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_decd2.dir/link.txt --verbose=1
+        Using built-in specs.
+        Reading specs from /usr/lib/gcc/avr/14.2.0/device-specs/specs-avr2
+        COLLECT_GCC=/usr/bin/avr-gcc
+        COLLECT_LTO_WRAPPER=/usr/lib/gcc/avr/14.2.0/lto-wrapper
+        avr-gcc: error: unrecognized command-line option '-rdynamic'
+        Target: avr
+        Configured with: ../src/configure -v --enable-languages=c,c++,rust --prefix=/usr/lib --infodir=/usr/share/info --mandir=/usr/share/man --bindir=/usr/bin --libexecdir=/usr/lib --libdir=/usr/lib --enable-shared --with-system-zlib --enable-long-long --enable-nls --without-included-gettext --disable-libssp --disable-libcc1 --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=avr --enable-host-pie ASFLAGS= ASFLAGS_FOR_BUILD= CFLAGS='-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CFLAGS_FOR_BUILD=-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' CPPFLAGS='-Wdate-time -D_FORTIFY_SOURCE=2' 'CPPFLAGS_FOR_BUILD=-Wdate-time -D_FORTIFY_SOURCE=2' CXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' DFLAGS=-frelease DFLAGS_FOR_BUILD=-frelease FCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' FFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' LDFLAGS='-Wl,-z,relro -Wl,-z,now' 'LDFLAGS_FOR_BUILD=-Wl,-z,relro -Wl,-z,now' OBJCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' OBJCXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection'
+        Thread model: single
+        Supported LTO compression algorithms: zlib
+        gcc version 14.2.0 (GCC) 
+        /usr/bin/avr-gcc  -v -Wl,-v -rdynamic CMakeFiles/cmTC_decd2.dir/CMakeCCompilerABI.c.o -o cmTC_decd2
+        gmake[1]: *** [CMakeFiles/cmTC_decd2.dir/build.make:102: cmTC_decd2] Error 1
+        gmake[1]: Leaving directory '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-zoUI2K'
+        gmake: *** [Makefile:134: cmTC_decd2/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:56 (try_compile)"
+      - "CMakeLists.txt"
+    checks:
+      - "Check for working C compiler: /usr/bin/avr-gcc"
+    directories:
+      source: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-AR7Mfq"
+      binary: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-AR7Mfq"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_COMPILER_WORKS"
+      cached: true
+      stdout: |
+        Change Dir: '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-AR7Mfq'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_dd6e7/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_dd6e7.dir/build.make CMakeFiles/cmTC_dd6e7.dir/build
+        gmake[1]: Entrando no diretório '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-AR7Mfq'
+        
+        Building C object CMakeFiles/cmTC_dd6e7.dir/testCCompiler.c.o
+        /usr/bin/avr-gcc    -o CMakeFiles/cmTC_dd6e7.dir/testCCompiler.c.o -c /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-AR7Mfq/testCCompiler.c
+        Linking C executable cmTC_dd6e7
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_dd6e7.dir/link.txt --verbose=1
+        avr-gcc: error: unrecognized command-line option ‘-rdynamic’
+        /usr/bin/avr-gcc -rdynamic CMakeFiles/cmTC_dd6e7.dir/testCCompiler.c.o -o cmTC_dd6e7
+        gmake[1]: *** [CMakeFiles/cmTC_dd6e7.dir/build.make:102: cmTC_dd6e7] Error 1
+        gmake[1]: Saindo do diretório '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-AR7Mfq'
+        
+        gmake: *** [Makefile:134: cmTC_dd6e7/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: /usr/bin/avr-gcc 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+      
+      The C compiler identification is GNU, found in:
+        /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/3.31.6/CompilerIdC/a.out
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /usr/bin/avr-g++ 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is GNU, found in:
+        /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/3.31.6/CompilerIdCXX/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-GyesxK"
+      binary: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-GyesxK"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-GyesxK'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_fc019/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_fc019.dir/build.make CMakeFiles/cmTC_fc019.dir/build
+        gmake[1]: Entering directory '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-GyesxK'
+        Building C object CMakeFiles/cmTC_fc019.dir/CMakeCCompilerABI.c.o
+        /usr/bin/avr-gcc   -v -o CMakeFiles/cmTC_fc019.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c
+        Using built-in specs.
+        Reading specs from /usr/lib/gcc/avr/14.2.0/device-specs/specs-avr2
+        COLLECT_GCC=/usr/bin/avr-gcc
+        Target: avr
+        Configured with: ../src/configure -v --enable-languages=c,c++,rust --prefix=/usr/lib --infodir=/usr/share/info --mandir=/usr/share/man --bindir=/usr/bin --libexecdir=/usr/lib --libdir=/usr/lib --enable-shared --with-system-zlib --enable-long-long --enable-nls --without-included-gettext --disable-libssp --disable-libcc1 --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=avr --enable-host-pie ASFLAGS= ASFLAGS_FOR_BUILD= CFLAGS='-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CFLAGS_FOR_BUILD=-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' CPPFLAGS='-Wdate-time -D_FORTIFY_SOURCE=2' 'CPPFLAGS_FOR_BUILD=-Wdate-time -D_FORTIFY_SOURCE=2' CXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' DFLAGS=-frelease DFLAGS_FOR_BUILD=-frelease FCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' FFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' LDFLAGS='-Wl,-z,relro -Wl,-z,now' 'LDFLAGS_FOR_BUILD=-Wl,-z,relro -Wl,-z,now' OBJCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' OBJCXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection'
+        Thread model: single
+        Supported LTO compression algorithms: zlib
+        gcc version 14.2.0 (GCC) 
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_fc019.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_fc019.dir/'
+         /usr/lib/gcc/avr/14.2.0/cc1 -quiet -v /usr/share/cmake-3.31/Modules/CMakeCCompilerABI.c -mn-flash=6 -mskip-bug -quiet -dumpdir CMakeFiles/cmTC_fc019.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mdouble=32 -mlong-double=64 -version -o /tmp/ccSOmDgb.s
+        GNU C17 (GCC) version 14.2.0 (avr)
+        	compiled by GNU C version 14.2.0, GMP version 6.3.0, MPFR version 4.2.1, MPC version 1.3.1, isl version none
+        warning: MPFR header version 4.2.1 differs from library version 4.2.2.
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring nonexistent directory "/usr/lib/gcc/avr/14.2.0/../../../avr/sys-include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/lib/gcc/avr/14.2.0/include
+         /usr/lib/gcc/avr/14.2.0/include-fixed
+         /usr/lib/gcc/avr/14.2.0/../../../avr/include
+        End of search list.
+        Compiler executable checksum: 96b695ed744c081991ff1c63ee5470a9
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_fc019.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_fc019.dir/'
+         /usr/lib/gcc/avr/14.2.0/../../../avr/bin/as -mmcu=avr2 -mgcc-isr -o CMakeFiles/cmTC_fc019.dir/CMakeCCompilerABI.c.o /tmp/ccSOmDgb.s
+        COMPILER_PATH=/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/:/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/:/usr/lib/gcc/avr/14.2.0/../../../avr/bin/
+        LIBRARY_PATH=/usr/lib/gcc/avr/14.2.0/:/usr/lib/gcc/avr/14.2.0/../../../avr/lib/
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_fc019.dir/CMakeCCompilerABI.c.o' '-c' '-mdouble=32' '-mlong-double=64' '-specs=device-specs/specs-avr2' '-dumpdir' 'CMakeFiles/cmTC_fc019.dir/CMakeCCompilerABI.c.'
+        Linking C executable cmTC_fc019
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_fc019.dir/link.txt --verbose=1
+        Using built-in specs.
+        Reading specs from /usr/lib/gcc/avr/14.2.0/device-specs/specs-avr2
+        COLLECT_GCC=/usr/bin/avr-gcc
+        COLLECT_LTO_WRAPPER=/usr/lib/gcc/avr/14.2.0/lto-wrapper
+        avr-gcc: error: unrecognized command-line option '-rdynamic'
+        Target: avr
+        Configured with: ../src/configure -v --enable-languages=c,c++,rust --prefix=/usr/lib --infodir=/usr/share/info --mandir=/usr/share/man --bindir=/usr/bin --libexecdir=/usr/lib --libdir=/usr/lib --enable-shared --with-system-zlib --enable-long-long --enable-nls --without-included-gettext --disable-libssp --disable-libcc1 --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=avr --enable-host-pie ASFLAGS= ASFLAGS_FOR_BUILD= CFLAGS='-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CFLAGS_FOR_BUILD=-g -O2 -Werror=implicit-function-declaration -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' CPPFLAGS='-Wdate-time -D_FORTIFY_SOURCE=2' 'CPPFLAGS_FOR_BUILD=-Wdate-time -D_FORTIFY_SOURCE=2' CXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'CXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' DFLAGS=-frelease DFLAGS_FOR_BUILD=-frelease FCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' FFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' 'FFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -fcf-protection' LDFLAGS='-Wl,-z,relro -Wl,-z,now' 'LDFLAGS_FOR_BUILD=-Wl,-z,relro -Wl,-z,now' OBJCFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' OBJCXXFLAGS='-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection' 'OBJCXXFLAGS_FOR_BUILD=-g -O2 -ffile-prefix-map=/build/reproducible-path/gcc-avr-14.2.0=. -fstack-protector-strong -fstack-clash-protection -Wformat  -fcf-protection'
+        Thread model: single
+        Supported LTO compression algorithms: zlib
+        gcc version 14.2.0 (GCC) 
+        /usr/bin/avr-gcc  -v -Wl,-v -rdynamic CMakeFiles/cmTC_fc019.dir/CMakeCCompilerABI.c.o -o cmTC_fc019
+        gmake[1]: *** [CMakeFiles/cmTC_fc019.dir/build.make:102: cmTC_fc019] Error 1
+        gmake[1]: Leaving directory '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-GyesxK'
+        gmake: *** [Makefile:134: cmTC_fc019/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCCompiler.cmake:56 (try_compile)"
+      - "CMakeLists.txt"
+    checks:
+      - "Check for working C compiler: /usr/bin/avr-gcc"
+    directories:
+      source: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-BT3HTK"
+      binary: "/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-BT3HTK"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_COMPILER_WORKS"
+      cached: true
+      stdout: |
+        Change Dir: '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-BT3HTK'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_c729c/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_c729c.dir/build.make CMakeFiles/cmTC_c729c.dir/build
+        gmake[1]: Entrando no diretório '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-BT3HTK'
+        
+        Building C object CMakeFiles/cmTC_c729c.dir/testCCompiler.c.o
+        /usr/bin/avr-gcc    -o CMakeFiles/cmTC_c729c.dir/testCCompiler.c.o -c /home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-BT3HTK/testCCompiler.c
+        Linking C executable cmTC_c729c
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c729c.dir/link.txt --verbose=1
+        avr-gcc: error: unrecognized command-line option ‘-rdynamic’
+        /usr/bin/avr-gcc -rdynamic CMakeFiles/cmTC_c729c.dir/testCCompiler.c.o -o cmTC_c729c
+        gmake[1]: *** [CMakeFiles/cmTC_c729c.dir/build.make:102: cmTC_c729c] Error 1
+        gmake[1]: Saindo do diretório '/home/henrique/Documentos/Antares/Neblina/Avionica-Neblina-I/src/build/CMakeFiles/CMakeScratch/TryCompile-BT3HTK'
+        
+        gmake: *** [Makefile:134: cmTC_c729c/fast] Error 2
+        
+      exitCode: 2
+...

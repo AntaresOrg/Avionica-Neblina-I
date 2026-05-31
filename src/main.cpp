@@ -13,6 +13,7 @@
 #include "esp_log.h"
 #include "neo-6m.h"
 
+<<<<<<< HEAD
 #define I2C_MASTER_SCL_IO 22
 #define I2C_MASTER_SDA_IO 21
 #define I2C_MASTER_NUM I2C_NUM_0
@@ -511,6 +512,8 @@ bool bmp280_read_sensor(bmp280_sensor_t *sensor, float *out_relative_altitude_m)
 
     return true;
 }
+=======
+>>>>>>> 3ee4034 (separando os códigos da main)
 
 // ---------- MAIN ----------
 /**
