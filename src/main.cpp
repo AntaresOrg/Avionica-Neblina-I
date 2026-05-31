@@ -31,14 +31,18 @@
 static const char *TAG = "SENSORS";
 
 // Set to 1 to boot into flash readback (dump CSV), 0 for normal logging.
-#define FLASH_READBACK_MODE 1
+#define FLASH_READBACK_MODE 0
 // Set to 1 to erase the flight log region on boot BEFORE logging starts.
 // This runs only in normal logging mode (FLASH_READBACK_MODE=0).
 #define FLASH_RESET_BEFORE_READBACK 0
 
+// Minimum interval between LoRa transmissions of flight-log packets.
+#define LORA_TX_INTERVAL_MS 3000u
+
 static bool lora_ready = false;
 static bool flash_ready = false;
 static flight_log_t flight_log;
+static uint32_t last_lora_tx_ms = 0;
 
 static void log_line_serial_only(const char *line);
 
@@ -63,6 +67,24 @@ static void dump_flight_log(void)
         ESP_LOGW(TAG, "Flight log dump failed: %s", esp_err_to_name(err));
 }
 
+static void poll_lora_rx(void)
+{
+    if (!lora_ready)
+        return;
+
+    // Drain and print everything we receive from LoRa UART.
+    // NOTE: This prints to UART0 via printf() and can interleave with CSV output.
+    while (lora_available())
+    {
+        char buf[128];
+        int n = lora_read(buf, sizeof(buf));
+        if (n <= 0)
+            break;
+
+        printf("LORA_RX_RAW: %.*s\n", n, buf);
+    }
+}
+
 typedef struct {
     bool valid;
     float ax_g;
@@ -82,10 +104,7 @@ static void publish_line(const char *fmt, ...)
     va_end(args);
 
     ESP_LOGI(TAG, "%s", line);
-    if (lora_ready)
-    {
-        lora_send_line(line);
-    }
+    // LoRa transmission is reserved for flash-backed flight-log packets.
 }
 
 static void log_line_serial_only(const char *line)
@@ -599,6 +618,7 @@ extern "C" void app_main(void)
 
     while (1)
     {
+        poll_lora_rx();
         neo6m_loop();
         mpu6050_sample_t m1;
         mpu6050_sample_t m2;
@@ -659,19 +679,35 @@ extern "C" void app_main(void)
         .gps_satellites = gps_sat,
     };
 
-        // Always emit the timestamped line to serial (and LoRa if ready).
-        {
-            char line[384];
-            if (flight_log_format_sample_csv(&s, line, sizeof(line)) == ESP_OK)
-                write_line_serial_and_lora(NULL, line);
-        }
+        // Always emit the timestamped line to serial.
+        // LoRa should transmit only packets that were successfully saved to flash.
+        char line[384];
+        bool line_ok = (flight_log_format_sample_csv(&s, line, sizeof(line)) == ESP_OK);
+        if (line_ok)
+            log_line_serial_only(line);
 
-        // And always attempt to save the timestamped sample to flash when available.
+        bool saved = false;
         if (flash_ready && flight_log.initialized)
         {
             esp_err_t append_err = flight_log_append(&flight_log, &s);
             if (append_err != ESP_OK)
+            {
                 ESP_LOGW(TAG, "Flight log append failed: %s", esp_err_to_name(append_err));
+            }
+            else
+            {
+                saved = true;
+            }
+        }
+
+        if (saved && lora_ready && line_ok)
+        {
+            uint32_t now_ms = s.time_ms;
+            if (last_lora_tx_ms == 0 || (uint32_t)(now_ms - last_lora_tx_ms) >= LORA_TX_INTERVAL_MS)
+            {
+                lora_send_line(line);
+                last_lora_tx_ms = now_ms;
+            }
         }
 
         vTaskDelay(pdMS_TO_TICKS(1000));

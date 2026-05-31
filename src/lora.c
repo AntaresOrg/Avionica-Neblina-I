@@ -31,6 +31,10 @@ static const char *TAG = "LORA";
 
 static uint8_t rx_buffer[RX_BUFFER_SIZE];
 
+// Small line assembler for packet/command style messages.
+static char s_line_buf[256];
+static size_t s_line_len = 0;
+
 static void wait_aux(void)
 {
     if (LORA_AUX_PIN < 0)
@@ -208,4 +212,53 @@ int lora_read(char *buffer, size_t max_len)
 #endif
 
     return len;
+}
+
+bool lora_receive_line(char *out, size_t out_len)
+{
+    if (!out || out_len == 0)
+        return false;
+
+    // Read whatever is currently buffered without blocking.
+    int n = uart_read_bytes(LORA_UART, rx_buffer, sizeof(rx_buffer), 0);
+    if (n <= 0)
+        return false;
+
+    for (int i = 0; i < n; i++)
+    {
+        char c = (char)rx_buffer[i];
+
+        if (c == '\n')
+        {
+            // Strip optional '\r'.
+            while (s_line_len > 0 && s_line_buf[s_line_len - 1] == '\r')
+                s_line_len--;
+
+            size_t copy_len = s_line_len;
+            if (copy_len >= out_len)
+                copy_len = out_len - 1;
+
+            memcpy(out, s_line_buf, copy_len);
+            out[copy_len] = '\0';
+
+            s_line_len = 0;
+            return true;
+        }
+
+        // Ignore NULs (some modules can emit them on boot).
+        if (c == '\0')
+            continue;
+
+        if (s_line_len + 1 < sizeof(s_line_buf))
+        {
+            s_line_buf[s_line_len++] = c;
+        }
+        else
+        {
+            // Overflow: reset and wait for next line terminator.
+            s_line_len = 0;
+        }
+    }
+
+    return false;
 }
