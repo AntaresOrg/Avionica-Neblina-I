@@ -19,6 +19,16 @@ extern "C" {
  * @brief Estado de execução para um sensor MPU6050.
  */
 typedef struct {
+    bool valid;
+    float ax_g;
+    float ay_g;
+    float az_g;
+    float gx_dps;
+    float gy_dps;
+    float gz_dps;
+} mpu6050_sample_t;
+
+typedef struct {
     uint8_t addr;          /**< Endereço I2C (0x68 ou 0x69). */
     const char *name;      /**< Rótulo usado nos logs. */
     bool initialized;      /**< Verdadeiro quando o sensor é detectado e configurado. */
@@ -30,7 +40,6 @@ extern mpu6050_sensor_t mpu2;
 
 // Protótipos de funções do ecossistema do seu firmware (implementadas fora deste módulo)
 extern void publish_line(const char *format, ...);
-
 /**
  * @brief Inicializa um sensor MPU6050.
  *
@@ -49,7 +58,7 @@ void mpu6050_init_sensor(mpu6050_sensor_t *sensor);
  *
  * @param sensor Ponteiro para o descritor do sensor inicializado.
  */
-void mpu6050_read_sensor(const mpu6050_sensor_t *sensor);
+bool mpu6050_read_sensor(const mpu6050_sensor_t *sensor, mpu6050_sample_t *out);
 
 #ifdef __cplusplus
 }

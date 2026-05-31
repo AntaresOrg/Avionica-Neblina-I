@@ -28,7 +28,7 @@ static const char *TAG = "LORA";
 #define LORA_AUX_PIN -1
 
 #define RX_BUFFER_SIZE 512
-
+extern void publish_line(const char *fmt, ...);
 static uint8_t rx_buffer[RX_BUFFER_SIZE];
 
 // Small line assembler for packet/command style messages.

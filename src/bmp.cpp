@@ -114,19 +114,24 @@ void bmp280_init_sensor(bmp280_sensor_t *sensor)
  * to that first sample.
  *
  * @param sensor Pointer to initialized BMP280 descriptor.
- */
-void bmp280_read_sensor(bmp280_sensor_t *sensor)
+*/
+extern void publish_line(const char *fmt, ...);
+
+bool bmp280_read_sensor(bmp280_sensor_t *sensor, float *out_relative_altitude_m)
 {
+    if (out_relative_altitude_m)
+        *out_relative_altitude_m = NAN;
+
     if (!sensor->initialized)
     {
-        return;
+        return false;
     }
 
     uint8_t d[6];
     if (i2c_read(sensor->addr, 0xF7, d, 6) != ESP_OK)
     {
         ESP_LOGW(TAG, "%s read failed", sensor->name);
-        return;
+        return false;
     }
 
     int32_t adc_p = (d[0] << 12) | (d[1] << 4) | (d[2] >> 4);
@@ -165,7 +170,7 @@ void bmp280_read_sensor(bmp280_sensor_t *sensor)
     if (P <= 0.0f)
     {
         ESP_LOGW(TAG, "%s invalid pressure for altitude calculation", sensor->name);
-        return;
+        return false;
     }
 
     float altitude_m = bmp280_pressure_to_altitude(P, BMP280_SEA_LEVEL_PA);
@@ -182,7 +187,7 @@ void bmp280_read_sensor(bmp280_sensor_t *sensor)
                      sensor->name,
                      (unsigned int)sensor->baseline_samples,
                      (unsigned int)BMP280_BASELINE_STABILIZATION_SAMPLES);
-            return;
+            return false;
         }
 
         sensor->baseline_altitude_m = sensor->baseline_accumulator_m / sensor->baseline_samples;
@@ -192,4 +197,9 @@ void bmp280_read_sensor(bmp280_sensor_t *sensor)
 
     float relative_altitude_m = altitude_m - sensor->baseline_altitude_m;
     publish_line("%s Relative Altitude: %.2f m", sensor->name, relative_altitude_m);
+
+    if (out_relative_altitude_m)
+        *out_relative_altitude_m = relative_altitude_m;
+
+    return true;
 }

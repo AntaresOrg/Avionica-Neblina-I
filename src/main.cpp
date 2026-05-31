@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdarg.h>
 #include "lora.h"
 #include "flash_memory.h"
 #include "flight_log.h"
@@ -12,6 +13,67 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "neo-6m.h"
+#include "mpu6050.h"
+#include "bmp.h"
+#include "i2c.h"
+
+static const char *TAG = "SENSORS";
+// Set to 1 to boot into flash readback (dump CSV), 0 for normal logging.
+#define FLASH_READBACK_MODE 0
+// Set to 1 to erase the flight log region on boot BEFORE logging starts.
+// This runs only in normal logging mode (FLASH_READBACK_MODE=0).
+#define FLASH_RESET_BEFORE_READBACK 1
+
+
+static bool lora_ready = false;
+static bool flash_ready = false;
+static flight_log_t flight_log;
+
+static void log_line_serial_only(const char *line)
+{
+    if (!line)
+        return;
+
+    // Plain UART0 output (serial monitor friendly; no ESP_LOG prefixes).
+    printf("%s\n", line);
+}
+
+static void write_line_serial_and_lora(void *ctx, const char *line)
+{
+    (void)ctx;
+    log_line_serial_only(line);
+    if (lora_ready)
+        lora_send_line(line);
+}
+
+
+static void dump_flight_log(void)
+{
+    if (!flash_ready || !flight_log.initialized)
+    {
+        ESP_LOGW(TAG, "Flash/log not ready; cannot read back");
+        return;
+    }
+
+    esp_err_t err = flight_log_dump_csv(&flight_log, write_line_serial_and_lora, NULL, true);
+    if (err != ESP_OK)
+        ESP_LOGW(TAG, "Flight log dump failed: %s", esp_err_to_name(err));
+}
+
+void publish_line(const char *fmt, ...)
+{
+    char line[256];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(line, sizeof(line), fmt, args);
+    va_end(args);
+
+    ESP_LOGI(TAG, "%s", line);
+    if (lora_ready)
+    {
+        lora_send_line(line);
+    }
+}
 
 <<<<<<< HEAD
 #define I2C_MASTER_SCL_IO 22
