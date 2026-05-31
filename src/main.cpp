@@ -31,10 +31,10 @@
 static const char *TAG = "SENSORS";
 
 // Set to 1 to boot into flash readback (dump CSV), 0 for normal logging.
-#define FLASH_READBACK_MODE 0
+#define FLASH_READBACK_MODE 1
 // Set to 1 to erase the flight log region on boot BEFORE logging starts.
 // This runs only in normal logging mode (FLASH_READBACK_MODE=0).
-#define FLASH_RESET_BEFORE_READBACK 1
+#define FLASH_RESET_BEFORE_READBACK 0
 
 static bool lora_ready = false;
 static bool flash_ready = false;
@@ -514,7 +514,9 @@ extern "C" void app_main(void)
 
     flash_memory_config_t flash_cfg = {
         .host = SPI3_HOST,
+        // D1 = MOSI
         .mosi_io_num = GPIO_NUM_23,
+        // D0 = MISO
         .miso_io_num = GPIO_NUM_19,
         .sclk_io_num = GPIO_NUM_18,
         .cs_io_num = GPIO_NUM_5,

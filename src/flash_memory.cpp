@@ -12,6 +12,7 @@ static const char *TAG = "MEM_FLASH";
 // Flash commands
 static const uint8_t CMD_READ_STATUS_1 = 0x05;
 static const uint8_t CMD_WRITE_ENABLE  = 0x06;
+static const uint8_t CMD_READ_JEDEC_ID = 0x9F;
 static const uint8_t CMD_READ          = 0x03;
 static const uint8_t CMD_PAGE_PROGRAM  = 0x02;
 static const uint8_t CMD_SECTOR_ERASE4K = 0x20;
@@ -56,6 +57,23 @@ static esp_err_t flash_read_status1(uint8_t *out_status)
         return err;
 
     *out_status = rx[1];
+    return ESP_OK;
+}
+
+static esp_err_t flash_read_jedec_id(uint8_t *out_mfr, uint8_t *out_type, uint8_t *out_cap)
+{
+    if (!out_mfr || !out_type || !out_cap)
+        return ESP_ERR_INVALID_ARG;
+
+    uint8_t tx[4] = {CMD_READ_JEDEC_ID, 0x00, 0x00, 0x00};
+    uint8_t rx[4] = {0, 0, 0, 0};
+    esp_err_t err = flash_transceive(tx, rx, sizeof(tx));
+    if (err != ESP_OK)
+        return err;
+
+    *out_mfr = rx[1];
+    *out_type = rx[2];
+    *out_cap = rx[3];
     return ESP_OK;
 }
 
@@ -126,7 +144,31 @@ esp_err_t flash_memory_init(const flash_memory_config_t *cfg)
             return err;
     }
 
-    ESP_LOGI(TAG, "SPI flash ready (host=%d, cs=%d, clk=%d Hz)", (int)cfg->host, (int)cfg->cs_io_num, cfg->clock_speed_hz);
+    // Probe chip so we don't report success when MISO/CS/wiring is wrong.
+    // This is non-destructive (read-only) and gives a quick sanity check.
+    uint8_t status = 0;
+    esp_err_t status_err = flash_read_status1(&status);
+    if (status_err != ESP_OK)
+        return status_err;
+
+    uint8_t mfr = 0, type = 0, cap = 0;
+    esp_err_t id_err = flash_read_jedec_id(&mfr, &type, &cap);
+    if (id_err != ESP_OK)
+        return id_err;
+
+    ESP_LOGI(TAG, "SPI flash probe: JEDEC=%02X %02X %02X, SR1=%02X (host=%d, cs=%d, clk=%d Hz)",
+             mfr, type, cap, status, (int)cfg->host, (int)cfg->cs_io_num, cfg->clock_speed_hz);
+
+    // If the bus is floating/unwired, it's common to read 0xFF or 0x00.
+    if ((mfr == 0xFF && type == 0xFF && cap == 0xFF) || (mfr == 0x00 && type == 0x00 && cap == 0x00))
+    {
+        ESP_LOGE(TAG,
+                 "External flash did not respond (JEDEC looks invalid: %02X %02X %02X, SR1=%02X). "
+                 "Check CS/MISO/MOSI/SCLK wiring, WP/HOLD pins, and 3V3 power.",
+                 mfr, type, cap, status);
+        return ESP_ERR_NOT_FOUND;
+    }
+
     return ESP_OK;
 }
 
