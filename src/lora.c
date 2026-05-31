@@ -20,7 +20,7 @@
 #define LORA_AUX_PIN -1
 
 #define RX_BUFFER_SIZE 512
-
+extern void publish_line(const char *fmt, ...);
 static uint8_t rx_buffer[RX_BUFFER_SIZE];
 
 static void wait_aux(void)
@@ -67,7 +67,6 @@ bool lora_init(void)
         UART_PIN_NO_CHANGE);
     if (err != ESP_OK)
         return false;
-
 #if LORA_AUX_PIN >= 0
     gpio_config_t io_conf = {
         .pin_bit_mask = (1ULL << LORA_AUX_PIN),

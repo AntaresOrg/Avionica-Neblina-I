@@ -13,13 +13,17 @@ static const char *TAG = "MPU6050";
 /**
  * @brief Runtime state for one MPU6050 sensor.
  */
-typedef struct {
-    uint8_t addr;          /**< I2C address (0x68 or 0x69). */
-    const char *name;      /**< Label used in logs. */
-    bool initialized;      /**< True when sensor is detected and configured. */
-} mpu6050_sensor_t;
 
-mpu6050_sensor_t mpu1 = {
+/**
+ * @brief Initialize one MPU6050 sensor.
+ *
+ * Reads WHO_AM_I for basic communication validation and then clears sleep mode
+ * by writing 0x00 to register 0x6B.
+ *
+ * @param sensor Pointer to the MPU6050 descriptor to initialize.
+ */
+
+ mpu6050_sensor_t mpu1 = {
     .addr = MPU6050_ADDR_1,
     .name = "MPU1",
     .initialized = false,
@@ -31,14 +35,8 @@ mpu6050_sensor_t mpu2 = {
     .initialized = false,
 };
 
-/**
- * @brief Initialize one MPU6050 sensor.
- *
- * Reads WHO_AM_I for basic communication validation and then clears sleep mode
- * by writing 0x00 to register 0x6B.
- *
- * @param sensor Pointer to the MPU6050 descriptor to initialize.
- */
+extern void publish_line(const char *fmt, ...);
+
 void mpu6050_init_sensor(mpu6050_sensor_t *sensor)
 {
     uint8_t who_am_i = 0;
@@ -76,18 +74,21 @@ void mpu6050_init_sensor(mpu6050_sensor_t *sensor)
  *
  * @param sensor Pointer to the initialized sensor descriptor.
  */
-void mpu6050_read_sensor(const mpu6050_sensor_t *sensor)
+bool mpu6050_read_sensor(const mpu6050_sensor_t *sensor, mpu6050_sample_t *out)
 {
+    if (out)
+        memset(out, 0, sizeof(*out));
+
     if (!sensor->initialized)
     {
-        return;
+        return false;
     }
 
     uint8_t d[14];
     if (i2c_read(sensor->addr, 0x3B, d, 14) != ESP_OK)
     {
         ESP_LOGW(TAG, "%s read failed", sensor->name);
-        return;
+        return false;
     }
 
     int16_t ax = (d[0] << 8) | d[1];
@@ -106,6 +107,17 @@ void mpu6050_read_sensor(const mpu6050_sensor_t *sensor)
     float gy_dps = gy / 131.0;
     float gz_dps = gz / 131.0;
 
+    if (out)
+    {
+        out->valid = true;
+        out->ax_g = ax_g;
+        out->ay_g = ay_g;
+        out->az_g = az_g;
+        out->gx_dps = gx_dps;
+        out->gy_dps = gy_dps;
+        out->gz_dps = gz_dps;
+    }
+
     publish_line(
         "%s A[g] X=%.2f Y=%.2f Z=%.2f | G[dps] X=%.2f Y=%.2f Z=%.2f",
         sensor->name,
@@ -115,4 +127,6 @@ void mpu6050_read_sensor(const mpu6050_sensor_t *sensor)
         gx_dps,
         gy_dps,
         gz_dps);
+
+    return true;
 }

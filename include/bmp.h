@@ -101,7 +101,7 @@ void bmp280_init_sensor(bmp280_sensor_t *sensor);
  *
  * @param sensor Ponteiro para o descritor do BMP280 inicializado.
  */
-void bmp280_read_sensor(bmp280_sensor_t *sensor);
+bool bmp280_read_sensor(bmp280_sensor_t *sensor, float *out_relative_altitude_m);
 
 #ifdef __cplusplus
 }
