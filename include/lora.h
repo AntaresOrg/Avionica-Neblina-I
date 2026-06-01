@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+#define LORA_TX_INTERVAL_MS 3000u
+
 bool lora_init(void);
 
 bool lora_available(void);
