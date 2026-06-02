@@ -24,6 +24,9 @@ static const char *TAG = "SENSORS";
 // This runs only in normal logging mode (FLASH_READBACK_MODE=0).
 #define FLASH_RESET_BEFORE_READBACK 1
 
+// Minimum interval between LoRa transmissions of flight-log packets.
+#define LORA_TX_INTERVAL_MS 3000u
+
 static uint32_t last_lora_tx_ms = 0;
 
 static bool lora_ready = false;
@@ -47,7 +50,6 @@ static void write_line_serial_and_lora(void *ctx, const char *line)
         lora_send_line(line);
 }
 
-
 static void dump_flight_log(void)
 {
     if (!flash_ready || !flight_log.initialized)
@@ -59,21 +61,6 @@ static void dump_flight_log(void)
     esp_err_t err = flight_log_dump_csv(&flight_log, write_line_serial_and_lora, NULL, true);
     if (err != ESP_OK)
         ESP_LOGW(TAG, "Flight log dump failed: %s", esp_err_to_name(err));
-}
-
-void publish_line(const char *fmt, ...)
-{
-    char line[256];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(line, sizeof(line), fmt, args);
-    va_end(args);
-
-    ESP_LOGI(TAG, "%s", line);
-    if (lora_ready)
-    {
-        lora_send_line(line);
-    }
 }
 
 static void poll_lora_rx(void)
@@ -91,6 +78,21 @@ static void poll_lora_rx(void)
             break;
 
         printf("LORA_RX_RAW: %.*s\n", n, buf);
+    }
+}
+
+void publish_line(const char *fmt, ...)
+{
+    char line[256];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(line, sizeof(line), fmt, args);
+    va_end(args);
+
+    ESP_LOGI(TAG, "%s", line);
+    if (lora_ready)
+    {
+        lora_send_line(line);
     }
 }
 
