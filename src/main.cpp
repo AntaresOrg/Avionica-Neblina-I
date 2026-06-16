@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
+#include <limits.h>
 #include "lora.h"
 #include "flash_memory.h"
 #include "flight_log.h"
@@ -37,7 +38,45 @@ static const char *TAG = "SENSORS";
 #define FLASH_RESET_BEFORE_READBACK 0
 
 // Minimum interval between LoRa transmissions of flight-log packets.
-#define LORA_TX_INTERVAL_MS 3000u
+#define LORA_TX_INTERVAL_MS 1000u
+
+typedef enum {
+    TX_MODE_CSV = 0,
+    TX_MODE_STRUCT = 1,
+} telemetry_tx_mode_t;
+
+// Set transmission mode for LoRa packets.
+#define TELEMETRY_TX_MODE TX_MODE_CSV
+
+typedef struct __attribute__((packed)) {
+    int16_t tempo_s_x1;
+    int16_t bmp1_alt_rel_m_x10;
+    int16_t bmp2_alt_rel_m_x10;
+
+    int16_t mpu1_lin_x_x100;
+    int16_t mpu1_lin_y_x100;
+    int16_t mpu1_lin_z_x100;
+    int16_t mpu1_rad_x_x100;
+    int16_t mpu1_rad_y_x100;
+    int16_t mpu1_rad_z_x100;
+
+    int16_t mpu2_lin_x_x100;
+    int16_t mpu2_lin_y_x100;
+    int16_t mpu2_lin_z_x100;
+    int16_t mpu2_rad_x_x100;
+    int16_t mpu2_rad_y_x100;
+    int16_t mpu2_rad_z_x100;
+
+    char gps_lat[6];
+    char gps_lon[6];
+    int16_t gps_alt_m_x10;
+    uint8_t gps_sat_count_x1;
+
+    // Reserved/padding to keep LoRa binary payload fixed at 64 bytes.
+    uint8_t reserved[19];
+} telemetry_packet_t;
+
+static_assert(sizeof(telemetry_packet_t) == 64, "Unexpected telemetry_packet_t size");
 
 static bool lora_ready = false;
 static bool flash_ready = false;
@@ -45,6 +84,83 @@ static flight_log_t flight_log;
 static uint32_t last_lora_tx_ms = 0;
 
 static void log_line_serial_only(const char *line);
+
+static int16_t scale_to_i16(float value, float factor)
+{
+    if (isnan(value))
+        return 0;
+
+    float scaled = value * factor;
+
+    if (scaled > (float)INT16_MAX)
+        return INT16_MAX;
+    if (scaled < (float)INT16_MIN)
+        return INT16_MIN;
+
+    return (int16_t)scaled;
+}
+
+static uint8_t scale_to_u8(float value)
+{
+    if (isnan(value) || value < 0.0f)
+        return 0;
+    if (value > 255.0f)
+        return 255;
+
+    return (uint8_t)value;
+}
+
+static void encode_deg_x100_to_6chars(float deg, char out[6])
+{
+    if (isnan(deg))
+    {
+        memcpy(out, "------", 6);
+        return;
+    }
+
+    int scaled = (int)(deg * 100.0f);
+    if (scaled > 99999)
+        scaled = 99999;
+    if (scaled < -99999)
+        scaled = -99999;
+
+    char tmp[8];
+    snprintf(tmp, sizeof(tmp), "%+06d", scaled);
+    memcpy(out, tmp, 6);
+}
+
+static telemetry_packet_t build_telemetry_packet(const flight_sample_t *s)
+{
+    telemetry_packet_t p = {};
+
+    if (!s)
+        return p;
+
+    p.tempo_s_x1 = scale_to_i16((float)s->time_ms / 1000.0f, 1.0f);
+    p.bmp1_alt_rel_m_x10 = scale_to_i16(s->bmp1_relative_altitude_m, 10.0f);
+    p.bmp2_alt_rel_m_x10 = scale_to_i16(s->bmp2_relative_altitude_m, 10.0f);
+
+    p.mpu1_lin_x_x100 = scale_to_i16(s->mpu1_ax_g, 100.0f);
+    p.mpu1_lin_y_x100 = scale_to_i16(s->mpu1_ay_g, 100.0f);
+    p.mpu1_lin_z_x100 = scale_to_i16(s->mpu1_az_g, 100.0f);
+    p.mpu1_rad_x_x100 = scale_to_i16(s->mpu1_gx_dps, 100.0f);
+    p.mpu1_rad_y_x100 = scale_to_i16(s->mpu1_gy_dps, 100.0f);
+    p.mpu1_rad_z_x100 = scale_to_i16(s->mpu1_gz_dps, 100.0f);
+
+    p.mpu2_lin_x_x100 = scale_to_i16(s->mpu2_ax_g, 100.0f);
+    p.mpu2_lin_y_x100 = scale_to_i16(s->mpu2_ay_g, 100.0f);
+    p.mpu2_lin_z_x100 = scale_to_i16(s->mpu2_az_g, 100.0f);
+    p.mpu2_rad_x_x100 = scale_to_i16(s->mpu2_gx_dps, 100.0f);
+    p.mpu2_rad_y_x100 = scale_to_i16(s->mpu2_gy_dps, 100.0f);
+    p.mpu2_rad_z_x100 = scale_to_i16(s->mpu2_gz_dps, 100.0f);
+
+    encode_deg_x100_to_6chars(s->gps_lat_deg, p.gps_lat);
+    encode_deg_x100_to_6chars(s->gps_lon_deg, p.gps_lon);
+    p.gps_alt_m_x10 = scale_to_i16(s->gps_altitude_m, 10.0f);
+    p.gps_sat_count_x1 = scale_to_u8(s->gps_satellites);
+
+    return p;
+}
 
 static void write_line_serial_and_lora(void *ctx, const char *line)
 {
@@ -705,7 +821,16 @@ extern "C" void app_main(void)
             uint32_t now_ms = s.time_ms;
             if (last_lora_tx_ms == 0 || (uint32_t)(now_ms - last_lora_tx_ms) >= LORA_TX_INTERVAL_MS)
             {
-                lora_send_line(line);
+                if (TELEMETRY_TX_MODE == TX_MODE_STRUCT)
+                {
+                    telemetry_packet_t packet = build_telemetry_packet(&s);
+                    lora_send_bytes(&packet, sizeof(packet));
+                }
+                else
+                {
+                    lora_send_line(line);
+                }
+
                 last_lora_tx_ms = now_ms;
             }
         }

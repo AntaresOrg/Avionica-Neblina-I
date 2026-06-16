@@ -145,6 +145,25 @@ void lora_send(const char *msg)
     wait_aux();
 }
 
+void lora_send_bytes(const void *data, size_t len)
+{
+    if (!data || len == 0)
+        return;
+
+    wait_aux();
+
+    uart_write_bytes(
+        LORA_UART,
+        (const char *)data,
+        len);
+
+#if LORA_DEBUG
+    ESP_LOGD(TAG, "TX raw %u bytes", (unsigned)len);
+#endif
+
+    wait_aux();
+}
+
 void lora_send_line(const char *text)
 {
     if (!text)

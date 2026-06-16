@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,6 +20,9 @@ int lora_read(char *buffer, size_t max_len);
 bool lora_receive_line(char *out, size_t out_len);
 
 void lora_send(const char *msg);
+
+// Sends raw binary bytes over LoRa UART.
+void lora_send_bytes(const void *data, size_t len);
 
 // Helper: sends one line framed as "<text>\r\n" (truncates to fit).
 void lora_send_line(const char *text);
