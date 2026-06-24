@@ -111,17 +111,6 @@ extern "C" void app_main(void)
     else
         ESP_LOGW(TAG, "LoRa init failed, serial-only mode");
 
-    flash_memory_config_t flash_cfg = {
-        .host = SPI3_HOST,
-        // D1 = MOSI
-        .mosi_io_num = GPIO_NUM_23,
-        // D0 = MISO
-        .miso_io_num = GPIO_NUM_19,
-        .sclk_io_num = GPIO_NUM_18,
-        .cs_io_num = GPIO_NUM_5,
-        .clock_speed_hz = 8000000,
-    };
-
     const gps_config_t gps_cfg = kGpsConfig;
 
     ESP_ERROR_CHECK(gps_init(&gps_cfg));
@@ -157,13 +146,13 @@ extern "C" void app_main(void)
             vTaskDelay(pdMS_TO_TICKS(1000));
     }
 
-    if (kFlashResetBeforeReadback && flash_ready && flight_log.initialized)
+    if (!kFlashReadbackMode && kResetFlightLogBeforeLogging && flash_ready && flight_log.initialized)
     {
         // Full erase of a multi-megabyte region at boot can take a long time and
         // trip the task watchdog. Instead, reset the write pointer and erase the
         // first sector now; remaining sectors will be erased on-demand as logging
         // reaches them.
-        ESP_LOGW(TAG, "Resetting flight log before logging (kFlashResetBeforeReadback=1)");
+        ESP_LOGW(TAG, "Resetting flight log before logging (kResetFlightLogBeforeLogging=1)");
 
         flight_log.write_offset = 0;
 

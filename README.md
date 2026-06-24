@@ -47,6 +47,17 @@ Além disso o código foi escrito usando a extensão PlatformIO no VSCode, na pl
 * CS: GPIO 5
 * Host SPI: SPI3
 
+## Configurações compartilhadas
+
+As definições centrais do firmware ficam em `include/avionics_config.h`.
+
+* I2C0: GPIO 22 (SCL), GPIO 21 (SDA), 100 kHz
+* GPS Neo-6M: UART1, 9600 baud, TX do GPS -> RX do ESP32 GPIO 14, RX do GPS -> TX do ESP32 GPIO 27
+* Flash W25Q128: SPI3, MOSI GPIO 23, MISO GPIO 19, SCLK GPIO 18, CS GPIO 5
+* Telemetria: formato CSV via LoRa
+* Modo de boot atual: readback da flash (`kFlashReadbackMode = true`)
+* Reset do flight log ao iniciar logging normal: `kResetFlightLogBeforeLogging`
+
 ### LoRa E220 900T30D
 
 * A pilha de comunicação LoRa é tratada em `src/lora.c`

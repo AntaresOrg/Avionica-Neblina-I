@@ -44,8 +44,28 @@ typedef struct {
     bool initialized;
 } bmp280_sensor_t;
 
-static bmp280_sensor_t bmp1 = {BMP280_ADDR_1, "BMP1", {0}, 0, 0, 0.0f, false, 0.0f, false};
-static bmp280_sensor_t bmp2 = {BMP280_ADDR_2, "BMP2", {0}, 0, 0, 0.0f, false, 0.0f, false};
+static bmp280_sensor_t bmp1 = {
+    BMP280_ADDR_1,
+    "BMP1",
+    {},
+    0,
+    0,
+    0.0f,
+    false,
+    0.0f,
+    false,
+};
+static bmp280_sensor_t bmp2 = {
+    BMP280_ADDR_2,
+    "BMP2",
+    {},
+    0,
+    0,
+    0.0f,
+    false,
+    0.0f,
+    false,
+};
 
 static esp_err_t i2c_read(uint8_t addr, uint8_t reg, uint8_t *data, size_t len)
 {

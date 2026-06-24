@@ -7,17 +7,30 @@
 #include "gps.h"
 #include "telemetry.h"
 
+// Shared hardware and mode configuration used by the firmware.
+// Keep this file in sync with the physical wiring and boot mode of the avionics.
+
+// Main I2C bus used by the BMP280 and MPU6050 sensors.
 static constexpr i2c_port_t kI2cMasterNum = I2C_NUM_0;
+// I2C SCL line on the ESP32.
 static constexpr gpio_num_t kI2cMasterSclIo = GPIO_NUM_22;
+// I2C SDA line on the ESP32.
 static constexpr gpio_num_t kI2cMasterSdaIo = GPIO_NUM_21;
+// Standard 100 kHz I2C bus speed.
 static constexpr int kI2cMasterFreqHz = 100000;
 
+// When true, the firmware boots in flash readback mode instead of normal logging.
 static constexpr bool kFlashReadbackMode = false;
-static constexpr bool kFlashResetBeforeReadback = false;
+// When booting for normal logging, reset the flight log before appending new data.
+static constexpr bool kResetFlightLogBeforeLogging = false;
+// Period between LoRa telemetry transmissions in milliseconds.
 static constexpr uint32_t kLoraTxIntervalMs = 1000u;
 
+// Telemetry packet format sent over LoRa.
 static constexpr telemetry_tx_mode_t kTelemetryTxMode = TX_MODE_CSV;
 
+// GPS/Neo-6M UART wiring and parser settings.
+// UART1 TX is kept for completeness; the important receive path is GPS TX -> ESP RX.
 static constexpr gps_config_t kGpsConfig = {
     .uart_num = UART_NUM_1,
     .baud_rate = 9600,
@@ -27,6 +40,7 @@ static constexpr gps_config_t kGpsConfig = {
     .max_fix_age_ms = 2000,
 };
 
+// External SPI flash wiring for the W25Q128 chip.
 static constexpr flash_memory_config_t kFlashConfig = {
     .host = SPI3_HOST,
     .mosi_io_num = GPIO_NUM_23,
