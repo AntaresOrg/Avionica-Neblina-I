@@ -160,11 +160,17 @@ extern "C" void app_main(void)
         ESP_LOGW(TAG, "GPS init failed: %s", esp_err_to_name(gps_err));
 
     const flight_state_thresholds_t flight_thresholds = {
+        .debug_flight_mode_only = kDebugFlightModeOnly,
         .altitude_offset = kAltitudeOffsetM,
         .reef_altitude_m = kReefAltitudeM,
         .ground_altitude_m = kGroundAltitudeM,
     };
     flight_state_controller_init(&flight_controller, &flight_thresholds);
+
+    if (kDebugFlightModeOnly)
+    {
+        ESP_LOGW(TAG, "DEBUG FLIGHT MODE ONLY enabled: forcing FLIGHT state and ignoring altitude-based transitions");
+    }
 
     const flash_memory_config_t flash_cfg = kFlashConfig;
 

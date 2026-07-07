@@ -15,7 +15,7 @@ void flight_state_controller_init(flight_state_controller_t *controller,
         return;
 
     controller->thresholds = thresholds ? *thresholds : flight_state_thresholds_t{};
-    controller->phase = FLIGHT_STATE_GROUND;
+    controller->phase = controller->thresholds.debug_flight_mode_only ? FLIGHT_STATE_FLIGHT : FLIGHT_STATE_GROUND;
     controller->chute_deployed = false;
     controller->reef_deployed = false;
     controller->max_altitude_m = NAN;
@@ -27,6 +27,15 @@ flight_state_phase_t flight_state_controller_update(flight_state_controller_t *c
 {
     if (!controller)
         return FLIGHT_STATE_GROUND;
+
+    if (controller->thresholds.debug_flight_mode_only)
+    {
+        if (altitude_is_valid(current_altitude_m))
+            controller->current_altitude_m = current_altitude_m;
+
+        controller->phase = FLIGHT_STATE_FLIGHT;
+        return controller->phase;
+    }
 
     if (altitude_is_valid(current_altitude_m))
     {

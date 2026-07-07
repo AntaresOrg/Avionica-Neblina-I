@@ -18,6 +18,7 @@ typedef enum {
 } flight_state_phase_t;
 
 typedef struct {
+    bool debug_flight_mode_only;
     float altitude_offset;
     float reef_altitude_m;
     float ground_altitude_m;
