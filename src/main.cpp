@@ -7,6 +7,7 @@
 #include "bmp280.h"
 #include "gps.h"
 #include "telemetry.h"
+#include "flight_state.h"
 #include "avionics_config.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -18,9 +19,12 @@
 static const char *TAG = "SENSORS";
 
 static bool lora_ready = false;
+static bool gps_ready = false;
 static bool flash_ready = false;
 static flight_log_t flight_log;
+static flight_state_controller_t flight_controller;
 static uint32_t last_lora_tx_ms = 0;
+static bool telemetry_header_sent = false;
 
 static void log_line_serial_only(const char *line);
 
@@ -72,6 +76,32 @@ static void log_line_serial_only(const char *line)
     printf("%s\n", line);
 }
 
+static avionics_component_status_t get_component_status(void)
+{
+    avionics_component_status_t status = {
+        .lora_ready = lora_ready,
+        .gps_ready = gps_ready,
+        .flash_ready = flash_ready,
+        .bmp1_ready = bmp280_is_initialized(0),
+        .bmp2_ready = bmp280_is_initialized(1),
+        .mpu1_ready = mpu6050_is_initialized(0),
+        .mpu2_ready = mpu6050_is_initialized(1),
+    };
+
+    return status;
+}
+
+static void send_ground_component_status(void)
+{
+    if (!lora_ready)
+        return;
+
+    char line[192];
+    avionics_component_status_t status = get_component_status();
+    if (flight_state_format_component_status(&flight_controller, &status, line, sizeof(line)) == ESP_OK)
+        lora_send_line(line);
+}
+
 /**
  * @brief Configure and start ESP32 I2C master peripheral.
  *
@@ -113,7 +143,19 @@ extern "C" void app_main(void)
 
     const gps_config_t gps_cfg = kGpsConfig;
 
-    ESP_ERROR_CHECK(gps_init(&gps_cfg));
+    esp_err_t gps_err = gps_init(&gps_cfg);
+    gps_ready = (gps_err == ESP_OK);
+    if (gps_ready)
+        ESP_LOGI(TAG, "GPS initialized");
+    else
+        ESP_LOGW(TAG, "GPS init failed: %s", esp_err_to_name(gps_err));
+
+    const flight_state_thresholds_t flight_thresholds = {
+        .target_altitude_m = kTargetAltitudeM,
+        .reef_altitude_m = kReefAltitudeM,
+        .ground_altitude_m = kGroundAltitudeM,
+    };
+    flight_state_controller_init(&flight_controller, &flight_thresholds);
 
     const flash_memory_config_t flash_cfg = kFlashConfig;
 
@@ -166,14 +208,6 @@ extern "C" void app_main(void)
     mpu6050_init_all();
     bmp280_init_all();
 
-    // In normal logging mode, print a CSV header once so a serial capture can be
-    // saved directly as a CSV file.
-    {
-        char header[384];
-        if (flight_log_format_csv_header(header, sizeof(header)) == ESP_OK)
-            log_line_serial_only(header);
-    }
-
     while (1)
     {
         poll_lora_rx();
@@ -215,6 +249,45 @@ extern "C" void app_main(void)
     };
 
         gps_fill_sample(&s, gps_cfg.max_fix_age_ms);
+
+        float current_altitude_m = flight_state_select_current_altitude(
+            s.bmp1_relative_altitude_m,
+            s.bmp2_relative_altitude_m);
+        flight_state_phase_t previous_phase = flight_controller.phase;
+        flight_state_phase_t current_phase = flight_state_controller_update(&flight_controller, current_altitude_m);
+
+        if (current_phase != previous_phase)
+        {
+            ESP_LOGI(TAG,
+                     "Flight state -> %s (alt=%.2f m, reef=%u, chute=%u)",
+                     flight_state_name(current_phase),
+                     flight_controller.current_altitude_m,
+                     flight_controller.reef_deployed ? 1u : 0u,
+                     flight_controller.chute_deployed ? 1u : 0u);
+        }
+
+        if (flight_state_should_send_component_status(&flight_controller))
+        {
+            uint32_t now_ms = s.time_ms;
+            if (last_lora_tx_ms == 0 || (uint32_t)(now_ms - last_lora_tx_ms) >= kLoraTxIntervalMs)
+            {
+                send_ground_component_status();
+                last_lora_tx_ms = now_ms;
+            }
+
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            continue;
+        }
+
+        if (!telemetry_header_sent)
+        {
+            char header[384];
+            if (flight_log_format_csv_header(header, sizeof(header)) == ESP_OK)
+            {
+                log_line_serial_only(header);
+                telemetry_header_sent = true;
+            }
+        }
 
         // Always emit the timestamped line to serial.
         // LoRa should transmit only packets that were successfully saved to flash.

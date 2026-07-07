@@ -26,6 +26,11 @@ static constexpr bool kResetFlightLogBeforeLogging = false;
 // Period between LoRa telemetry transmissions in milliseconds.
 static constexpr uint32_t kLoraTxIntervalMs = 1000u;
 
+// Flight-state altitude thresholds in meters, based on BMP280 relative altitude.
+static constexpr float kTargetAltitudeM = 300.0f;
+static constexpr float kReefAltitudeM = 150.0f;
+static constexpr float kGroundAltitudeM = 5.0f;
+
 // Telemetry packet format sent over LoRa.
 static constexpr telemetry_tx_mode_t kTelemetryTxMode = TX_MODE_CSV;
 

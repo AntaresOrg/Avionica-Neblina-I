@@ -235,3 +235,13 @@ void bmp280_read_all(float *out_bmp1_relative_altitude_m, float *out_bmp2_relati
     bmp280_read_sensor(&bmp1, out_bmp1_relative_altitude_m);
     bmp280_read_sensor(&bmp2, out_bmp2_relative_altitude_m);
 }
+
+bool bmp280_is_initialized(size_t sensor_index)
+{
+    if (sensor_index == 0)
+        return bmp1.initialized;
+    if (sensor_index == 1)
+        return bmp2.initialized;
+
+    return false;
+}

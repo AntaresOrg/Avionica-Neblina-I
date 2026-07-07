@@ -151,3 +151,13 @@ void mpu6050_read_all(mpu6050_sample_t *out_mpu1, mpu6050_sample_t *out_mpu2)
     mpu6050_read_sensor(&mpu1, out_mpu1);
     mpu6050_read_sensor(&mpu2, out_mpu2);
 }
+
+bool mpu6050_is_initialized(size_t sensor_index)
+{
+    if (sensor_index == 0)
+        return mpu1.initialized;
+    if (sensor_index == 1)
+        return mpu2.initialized;
+
+    return false;
+}
