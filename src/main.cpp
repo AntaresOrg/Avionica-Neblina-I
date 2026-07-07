@@ -160,7 +160,7 @@ extern "C" void app_main(void)
         ESP_LOGW(TAG, "GPS init failed: %s", esp_err_to_name(gps_err));
 
     const flight_state_thresholds_t flight_thresholds = {
-        .target_altitude_m = kTargetAltitudeM,
+        .altitude_offset = kAltitudeOffsetM,
         .reef_altitude_m = kReefAltitudeM,
         .ground_altitude_m = kGroundAltitudeM,
     };
@@ -268,11 +268,11 @@ extern "C" void app_main(void)
         if (current_phase != previous_phase)
         {
             ESP_LOGI(TAG,
-                     "Flight state -> %s (alt=%.2f m, reef=%u, chute=%u)",
+                     "Flight state -> %s (alt=%.2f m, chute=%u, reef=%u)",
                      flight_state_name(current_phase),
                      flight_controller.current_altitude_m,
-                     flight_controller.reef_deployed ? 1u : 0u,
-                     flight_controller.chute_deployed ? 1u : 0u);
+                     flight_controller.chute_deployed ? 1u : 0u,
+                     flight_controller.reef_deployed ? 1u : 0u);
         }
 
         if (flight_state_should_send_component_status(&flight_controller))

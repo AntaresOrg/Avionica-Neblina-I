@@ -12,13 +12,13 @@ extern "C" {
 typedef enum {
     FLIGHT_STATE_GROUND = 0,
     FLIGHT_STATE_FLIGHT,
-    FLIGHT_STATE_REEF,
     FLIGHT_STATE_CHUTE,
+    FLIGHT_STATE_REEF,
     FLIGHT_STATE_RECOVERY,
 } flight_state_phase_t;
 
 typedef struct {
-    float target_altitude_m;
+    float altitude_offset;
     float reef_altitude_m;
     float ground_altitude_m;
 } flight_state_thresholds_t;
@@ -36,8 +36,9 @@ typedef struct {
 typedef struct {
     flight_state_thresholds_t thresholds;
     flight_state_phase_t phase;
-    bool reef_deployed;
     bool chute_deployed;
+    bool reef_deployed;
+    float max_altitude_m;
     float current_altitude_m;
 } flight_state_controller_t;
 

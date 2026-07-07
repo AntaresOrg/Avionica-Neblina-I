@@ -28,7 +28,7 @@ static constexpr bool kResetFlightLogBeforeLogging = false;
 static constexpr uint32_t kLoraTxIntervalMs = 1000u;
 
 // Flight-state altitude thresholds in meters, based on BMP280 relative altitude.
-static constexpr float kTargetAltitudeM = 300.0f;
+static constexpr float kAltitudeOffsetM = 10.0f;
 static constexpr float kReefAltitudeM = 150.0f;
 static constexpr float kGroundAltitudeM = 5.0f;
 
@@ -56,8 +56,8 @@ static constexpr flash_memory_config_t kFlashConfig = {
     .clock_speed_hz = 8000000,
 };
 
-// Output GPIOs for the reefing and main chute charges.
+// Output GPIOs for the chute and reef charges.
 static constexpr charges_config_t kChargesConfig = {
-    .reef_gpio = GPIO_NUM_25,
-    .chute_gpio = GPIO_NUM_26,
+    .reef_gpio = GPIO_NUM_26,
+    .chute_gpio = GPIO_NUM_25,
 };
