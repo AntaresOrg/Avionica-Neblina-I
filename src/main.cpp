@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include "charges.h"
 #include "lora.h"
 #include "flash_memory.h"
 #include "flight_log.h"
@@ -19,6 +20,7 @@
 static const char *TAG = "SENSORS";
 
 static bool lora_ready = false;
+static bool charges_ready = false;
 static bool gps_ready = false;
 static bool flash_ready = false;
 static flight_log_t flight_log;
@@ -140,6 +142,13 @@ extern "C" void app_main(void)
         ESP_LOGI(TAG, "LoRa initialized");
     else
         ESP_LOGW(TAG, "LoRa init failed, serial-only mode");
+
+    esp_err_t charges_err = charges_init(&kChargesConfig);
+    charges_ready = (charges_err == ESP_OK);
+    if (charges_ready)
+        ESP_LOGI(TAG, "Charges initialized");
+    else
+        ESP_LOGW(TAG, "Charges init failed: %s", esp_err_to_name(charges_err));
 
     const gps_config_t gps_cfg = kGpsConfig;
 

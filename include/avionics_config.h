@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include "charges.h"
 #include "flash_memory.h"
 #include "driver/i2c.h"
 #include "gps.h"
@@ -53,4 +54,10 @@ static constexpr flash_memory_config_t kFlashConfig = {
     .sclk_io_num = GPIO_NUM_18,
     .cs_io_num = GPIO_NUM_5,
     .clock_speed_hz = 8000000,
+};
+
+// Output GPIOs for the reefing and main chute charges.
+static constexpr charges_config_t kChargesConfig = {
+    .reef_gpio = GPIO_NUM_25,
+    .chute_gpio = GPIO_NUM_26,
 };
