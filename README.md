@@ -114,3 +114,7 @@ Atualmente os requisitos de código e se seu status de completion na plataforma 
 * `src/flight_log.c` e `include/flight_log.h`: persistência e leitura dos registros na flash externa
 * `src/flash_memory.cpp` e `include/flash_memory.h`: driver da flash SPI externa
 * `src/lora.c` e `include/lora.h`: driver da comunicação LoRa
+
+## Mini wiki
+
+Para uma análise técnica mais estruturada do firmware, veja a documentação em `docs/README.md`.
