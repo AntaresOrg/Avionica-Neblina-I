@@ -37,6 +37,12 @@ static constexpr float kGroundAltitudeM = 5.0f;
 // Telemetry packet format sent over LoRa.
 static constexpr telemetry_tx_mode_t kTelemetryTxMode = TX_MODE_CSV;
 
+// Deployment safety gate. Leave false for bench tests and set intentionally true for flight.
+static constexpr bool kFlightDeploymentArmed = false;
+
+// Launch detection threshold based on the strongest valid MPU6050 magnitude.
+static constexpr float kLaunchAccelThresholdG = 2.0f;
+
 // GPS/Neo-6M UART wiring and parser settings.
 // UART1 TX is kept for completeness; the important receive path is GPS TX -> ESP RX.
 static constexpr gps_config_t kGpsConfig = {

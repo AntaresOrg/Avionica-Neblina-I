@@ -16,10 +16,41 @@ void flight_state_controller_init(flight_state_controller_t *controller,
 
     controller->thresholds = thresholds ? *thresholds : flight_state_thresholds_t{};
     controller->phase = controller->thresholds.debug_flight_mode_only ? FLIGHT_STATE_FLIGHT : FLIGHT_STATE_GROUND;
+    controller->armed = false;
+    controller->faulted = false;
+    controller->launch_detected = false;
     controller->chute_deployed = false;
     controller->reef_deployed = false;
+    controller->chute_commanded = false;
+    controller->reef_commanded = false;
     controller->max_altitude_m = NAN;
     controller->current_altitude_m = NAN;
+}
+
+void flight_state_controller_set_armed(flight_state_controller_t *controller, bool armed)
+{
+    if (!controller)
+        return;
+
+    controller->armed = armed && !controller->faulted;
+}
+
+void flight_state_controller_set_faulted(flight_state_controller_t *controller, bool faulted)
+{
+    if (!controller)
+        return;
+
+    controller->faulted = faulted;
+    if (faulted)
+        controller->armed = false;
+}
+
+void flight_state_controller_mark_launch_detected(flight_state_controller_t *controller)
+{
+    if (!controller || controller->faulted)
+        return;
+
+    controller->launch_detected = true;
 }
 
 flight_state_phase_t flight_state_controller_update(flight_state_controller_t *controller,
@@ -34,6 +65,15 @@ flight_state_phase_t flight_state_controller_update(flight_state_controller_t *c
             controller->current_altitude_m = current_altitude_m;
 
         controller->phase = FLIGHT_STATE_FLIGHT;
+        return controller->phase;
+    }
+
+    if (controller->faulted || !controller->armed || !controller->launch_detected)
+    {
+        if (altitude_is_valid(current_altitude_m))
+            controller->current_altitude_m = current_altitude_m;
+
+        controller->phase = FLIGHT_STATE_GROUND;
         return controller->phase;
     }
 
@@ -86,6 +126,24 @@ flight_state_phase_t flight_state_controller_update(flight_state_controller_t *c
     }
 
     return controller->phase;
+}
+
+bool flight_state_controller_should_fire_chute(const flight_state_controller_t *controller)
+{
+    if (!controller)
+        return false;
+
+    return controller->armed && !controller->faulted && controller->launch_detected &&
+           controller->phase == FLIGHT_STATE_CHUTE && !controller->chute_commanded;
+}
+
+bool flight_state_controller_should_fire_reef(const flight_state_controller_t *controller)
+{
+    if (!controller)
+        return false;
+
+    return controller->armed && !controller->faulted && controller->launch_detected &&
+           controller->phase == FLIGHT_STATE_REEF && !controller->reef_commanded;
 }
 
 bool flight_state_should_log_and_save(const flight_state_controller_t *controller)
@@ -149,9 +207,12 @@ esp_err_t flight_state_format_component_status(const flight_state_controller_t *
 
     int written = snprintf(out,
                            out_len,
-                           "STATE=%s,ALT=%.2f,CHUTE=%u,REEF=%u,LORA=%u,GPS=%u,BMP1=%u,BMP2=%u,MPU1=%u,MPU2=%u,FLASH=%u",
+                           "STATE=%s,ALT=%.2f,ARM=%u,FAULT=%u,LAUNCH=%u,CHUTE=%u,REEF=%u,LORA=%u,GPS=%u,BMP1=%u,BMP2=%u,MPU1=%u,MPU2=%u,FLASH=%u",
                            flight_state_name(controller->phase),
                            controller->current_altitude_m,
+                           controller->armed ? 1u : 0u,
+                           controller->faulted ? 1u : 0u,
+                           controller->launch_detected ? 1u : 0u,
                            controller->chute_deployed ? 1u : 0u,
                            controller->reef_deployed ? 1u : 0u,
                            status->lora_ready ? 1u : 0u,

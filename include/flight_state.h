@@ -37,8 +37,13 @@ typedef struct {
 typedef struct {
     flight_state_thresholds_t thresholds;
     flight_state_phase_t phase;
+    bool armed;
+    bool faulted;
+    bool launch_detected;
     bool chute_deployed;
     bool reef_deployed;
+    bool chute_commanded;
+    bool reef_commanded;
     float max_altitude_m;
     float current_altitude_m;
 } flight_state_controller_t;
@@ -46,8 +51,18 @@ typedef struct {
 void flight_state_controller_init(flight_state_controller_t *controller,
                                   const flight_state_thresholds_t *thresholds);
 
+void flight_state_controller_set_armed(flight_state_controller_t *controller, bool armed);
+
+void flight_state_controller_set_faulted(flight_state_controller_t *controller, bool faulted);
+
+void flight_state_controller_mark_launch_detected(flight_state_controller_t *controller);
+
 flight_state_phase_t flight_state_controller_update(flight_state_controller_t *controller,
                                                     float current_altitude_m);
+
+bool flight_state_controller_should_fire_chute(const flight_state_controller_t *controller);
+
+bool flight_state_controller_should_fire_reef(const flight_state_controller_t *controller);
 
 bool flight_state_should_log_and_save(const flight_state_controller_t *controller);
 

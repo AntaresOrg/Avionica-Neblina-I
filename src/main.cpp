@@ -28,6 +28,8 @@ static flight_state_controller_t flight_controller;
 static uint32_t last_lora_tx_ms = 0;
 static bool telemetry_header_sent = false;
 
+typedef esp_err_t (*charge_set_fn_t)(bool enabled);
+
 static void log_line_serial_only(const char *line);
 
 static void write_line_serial_and_lora(void *ctx, const char *line)
@@ -104,6 +106,42 @@ static void send_ground_component_status(void)
         lora_send_line(line);
 }
 
+static float mpu6050_accel_magnitude_g(const mpu6050_sample_t *sample)
+{
+    if (!sample || !sample->valid)
+        return NAN;
+
+    return sqrtf(sample->ax_g * sample->ax_g + sample->ay_g * sample->ay_g + sample->az_g * sample->az_g);
+}
+
+static bool detect_launch_event(const mpu6050_sample_t *m1, const mpu6050_sample_t *m2)
+{
+    const float mag1 = mpu6050_accel_magnitude_g(m1);
+    const float mag2 = mpu6050_accel_magnitude_g(m2);
+
+    return (isfinite(mag1) && mag1 >= kLaunchAccelThresholdG) ||
+           (isfinite(mag2) && mag2 >= kLaunchAccelThresholdG);
+}
+
+static esp_err_t fire_charge_output(charge_set_fn_t set_fn, const char *name)
+{
+    if (!set_fn || !name)
+        return ESP_ERR_INVALID_ARG;
+
+    ESP_LOGW(TAG, "Firing %s charge", name);
+    esp_err_t err = set_fn(true);
+    if (err != ESP_OK)
+        return err;
+
+    vTaskDelay(pdMS_TO_TICKS(250));
+
+    err = set_fn(false);
+    if (err != ESP_OK)
+        return err;
+
+    return ESP_OK;
+}
+
 /**
  * @brief Configure and start ESP32 I2C master peripheral.
  *
@@ -166,10 +204,26 @@ extern "C" void app_main(void)
         .ground_altitude_m = kGroundAltitudeM,
     };
     flight_state_controller_init(&flight_controller, &flight_thresholds);
+    flight_state_controller_set_armed(&flight_controller, kFlightDeploymentArmed);
+
+    if (kFlightDeploymentArmed)
+        ESP_LOGW(TAG, "Deployment armed by configuration");
+    else
+        ESP_LOGW(TAG, "Deployment safed by configuration");
 
     if (kDebugFlightModeOnly)
     {
         ESP_LOGW(TAG, "DEBUG FLIGHT MODE ONLY enabled: forcing FLIGHT state and ignoring altitude-based transitions");
+    }
+
+    if (charges_ready)
+    {
+        esp_err_t safe_err = charges_all_off();
+        if (safe_err != ESP_OK)
+        {
+            ESP_LOGW(TAG, "Failed to drive charges safe at boot: %s", esp_err_to_name(safe_err));
+            flight_state_controller_set_faulted(&flight_controller, true);
+        }
     }
 
     const flash_memory_config_t flash_cfg = kFlashConfig;
@@ -235,6 +289,9 @@ extern "C" void app_main(void)
         mpu6050_read_all(&m1, &m2);
         bmp280_read_all(&b1_alt, &b2_alt);
 
+        if (detect_launch_event(&m1, &m2))
+            flight_state_controller_mark_launch_detected(&flight_controller);
+
         // Always build a timestamped sample, even if sensors failed.
         // Missing values are stored/logged as NAN.
         flight_sample_t s = {
@@ -281,6 +338,52 @@ extern "C" void app_main(void)
                      flight_controller.reef_deployed ? 1u : 0u);
         }
 
+        if (flight_state_controller_should_fire_chute(&flight_controller))
+        {
+            if (!charges_ready)
+            {
+                ESP_LOGW(TAG, "Chute deployment requested but charges are not ready");
+                flight_state_controller_set_faulted(&flight_controller, true);
+            }
+            else
+            {
+                esp_err_t fire_err = fire_charge_output(charges_set_chute, "chute");
+                if (fire_err != ESP_OK)
+                {
+                    ESP_LOGW(TAG, "Chute charge fire failed: %s", esp_err_to_name(fire_err));
+                    flight_state_controller_set_faulted(&flight_controller, true);
+                }
+                else
+                {
+                    flight_controller.chute_commanded = true;
+                    flight_controller.chute_deployed = true;
+                }
+            }
+        }
+
+        if (flight_state_controller_should_fire_reef(&flight_controller))
+        {
+            if (!charges_ready)
+            {
+                ESP_LOGW(TAG, "Reef deployment requested but charges are not ready");
+                flight_state_controller_set_faulted(&flight_controller, true);
+            }
+            else
+            {
+                esp_err_t fire_err = fire_charge_output(charges_set_reef, "reef");
+                if (fire_err != ESP_OK)
+                {
+                    ESP_LOGW(TAG, "Reef charge fire failed: %s", esp_err_to_name(fire_err));
+                    flight_state_controller_set_faulted(&flight_controller, true);
+                }
+                else
+                {
+                    flight_controller.reef_commanded = true;
+                    flight_controller.reef_deployed = true;
+                }
+            }
+        }
+
         if (flight_state_should_send_component_status(&flight_controller))
         {
             uint32_t now_ms = s.time_ms;
@@ -290,6 +393,12 @@ extern "C" void app_main(void)
                 last_lora_tx_ms = now_ms;
             }
 
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            continue;
+        }
+
+        if (!flight_state_should_log_and_save(&flight_controller))
+        {
             vTaskDelay(pdMS_TO_TICKS(1000));
             continue;
         }
