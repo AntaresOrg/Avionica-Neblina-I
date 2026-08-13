@@ -7,6 +7,7 @@ static charges_config_t s_cfg = {
     .chute_gpio = GPIO_NUM_NC,
 };
 static bool s_initialized = false;
+static bool s_always_high = false;
 
 static bool charges_gpio_is_valid(gpio_num_t pin)
 {
@@ -15,18 +16,19 @@ static bool charges_gpio_is_valid(gpio_num_t pin)
 
 static esp_err_t charges_configure_output(gpio_num_t pin)
 {
-    gpio_config_t io_conf = {};
-    io_conf.pin_bit_mask = (1ULL << pin);
-    io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    io_conf.intr_type = GPIO_INTR_DISABLE;
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << pin),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
 
     esp_err_t err = gpio_config(&io_conf);
     if (err != ESP_OK)
         return err;
 
-    return gpio_set_level(pin, 0);
+    return gpio_set_level(pin, 1);
 }
 
 static esp_err_t charges_set_pin(gpio_num_t pin, bool enabled)
@@ -36,7 +38,7 @@ static esp_err_t charges_set_pin(gpio_num_t pin, bool enabled)
     if (!charges_gpio_is_valid(pin))
         return ESP_ERR_INVALID_ARG;
 
-    return gpio_set_level(pin, enabled ? 1 : 0);
+    return gpio_set_level(pin, (s_always_high || enabled) ? 1 : 0);
 }
 
 esp_err_t charges_init(const charges_config_t *cfg)
@@ -48,6 +50,8 @@ esp_err_t charges_init(const charges_config_t *cfg)
     if (cfg->reef_gpio == cfg->chute_gpio)
         return ESP_ERR_INVALID_ARG;
 
+    s_always_high = cfg->always_high;
+
     esp_err_t reef_err = charges_configure_output(cfg->reef_gpio);
     if (reef_err != ESP_OK)
         return reef_err;
@@ -58,6 +62,18 @@ esp_err_t charges_init(const charges_config_t *cfg)
 
     s_cfg = *cfg;
     s_initialized = true;
+
+    if (s_always_high)
+    {
+        esp_err_t reef_high_err = gpio_set_level(s_cfg.reef_gpio, 1);
+        if (reef_high_err != ESP_OK)
+            return reef_high_err;
+
+        esp_err_t chute_high_err = gpio_set_level(s_cfg.chute_gpio, 1);
+        if (chute_high_err != ESP_OK)
+            return chute_high_err;
+    }
+
     return ESP_OK;
 }
 
@@ -80,6 +96,8 @@ esp_err_t charges_all_off(void)
 {
     if (!s_initialized)
         return ESP_ERR_INVALID_STATE;
+    if (s_always_high)
+        return ESP_OK;
 
     esp_err_t reef_err = gpio_set_level(s_cfg.reef_gpio, 0);
     if (reef_err != ESP_OK)

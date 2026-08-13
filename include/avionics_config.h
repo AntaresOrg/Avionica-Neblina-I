@@ -25,7 +25,7 @@ static constexpr bool kFlashReadbackMode = false;
 // When booting for normal logging, reset the flight log before appending new data.
 static constexpr bool kResetFlightLogBeforeLogging = false;
 // Period between LoRa telemetry transmissions in milliseconds.
-static constexpr uint32_t kLoraTxIntervalMs = 1000u;
+static constexpr uint32_t kLoraTxIntervalMs = 500u;
 // When true, keep the avionics in FLIGHT mode only for debug and ignore altitude-based transitions.
 static constexpr bool kDebugFlightModeOnly = false;
 
@@ -38,10 +38,12 @@ static constexpr float kGroundAltitudeM = 5.0f;
 static constexpr telemetry_tx_mode_t kTelemetryTxMode = TX_MODE_CSV;
 
 // Deployment safety gate. Leave false for bench tests and set intentionally true for flight.
-static constexpr bool kFlightDeploymentArmed = false;
+static constexpr bool kFlightDeploymentArmed = true;
 
 // Launch detection threshold based on the strongest valid MPU6050 magnitude.
 static constexpr float kLaunchAccelThresholdG = 2.0f;
+// How long each charge output stays active HIGH when fired.
+static constexpr uint32_t kChargePulseDurationMs = 250u;
 
 // GPS/Neo-6M UART wiring and parser settings.
 // UART1 TX is kept for completeness; the important receive path is GPS TX -> ESP RX.
@@ -66,6 +68,7 @@ static constexpr flash_memory_config_t kFlashConfig = {
 
 // Output GPIOs for the chute and reef charges.
 static constexpr charges_config_t kChargesConfig = {
+    .always_high = true,
     .reef_gpio = GPIO_NUM_26,
     .chute_gpio = GPIO_NUM_25,
 };

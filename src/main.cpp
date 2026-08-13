@@ -27,10 +27,51 @@ static flight_log_t flight_log;
 static flight_state_controller_t flight_controller;
 static uint32_t last_lora_tx_ms = 0;
 static bool telemetry_header_sent = false;
+static uint32_t chute_charge_deadline_ms = 0;
+static uint32_t reef_charge_deadline_ms = 0;
 
 typedef esp_err_t (*charge_set_fn_t)(bool enabled);
 
 static void log_line_serial_only(const char *line);
+
+static uint32_t get_time_ms(void)
+{
+    return (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS);
+}
+
+static bool should_send_lora_now(uint32_t now_ms)
+{
+    return (last_lora_tx_ms == 0u) || ((uint32_t)(now_ms - last_lora_tx_ms) >= kLoraTxIntervalMs);
+}
+
+static void update_charge_outputs(uint32_t now_ms)
+{
+    const bool chute_active = (chute_charge_deadline_ms != 0u) && (now_ms < chute_charge_deadline_ms);
+    const bool reef_active = (reef_charge_deadline_ms != 0u) && (now_ms < reef_charge_deadline_ms);
+
+    if (!charges_ready)
+    {
+        chute_charge_deadline_ms = 0u;
+        reef_charge_deadline_ms = 0u;
+        return;
+    }
+
+    if (!chute_active && !reef_active)
+    {
+        (void)charges_all_off();
+        return;
+    }
+
+    if (chute_active)
+        (void)charges_set_chute(true);
+    else
+        (void)charges_set_chute(false);
+
+    if (reef_active)
+        (void)charges_set_reef(true);
+    else
+        (void)charges_set_reef(false);
+}
 
 static void write_line_serial_and_lora(void *ctx, const char *line)
 {
@@ -129,17 +170,7 @@ static esp_err_t fire_charge_output(charge_set_fn_t set_fn, const char *name)
         return ESP_ERR_INVALID_ARG;
 
     ESP_LOGW(TAG, "Firing %s charge", name);
-    esp_err_t err = set_fn(true);
-    if (err != ESP_OK)
-        return err;
-
-    vTaskDelay(pdMS_TO_TICKS(250));
-
-    err = set_fn(false);
-    if (err != ESP_OK)
-        return err;
-
-    return ESP_OK;
+    return set_fn(true);
 }
 
 /**
@@ -279,6 +310,9 @@ extern "C" void app_main(void)
 
     while (1)
     {
+        const uint32_t loop_now_ms = get_time_ms();
+        update_charge_outputs(loop_now_ms);
+
         poll_lora_rx();
         gps_loop();
         mpu6050_sample_t m1;
@@ -295,7 +329,7 @@ extern "C" void app_main(void)
         // Always build a timestamped sample, even if sensors failed.
         // Missing values are stored/logged as NAN.
         flight_sample_t s = {
-        .time_ms = (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS),
+        .time_ms = get_time_ms(),
 
         .bmp1_relative_altitude_m = b1_alt,
         .bmp2_relative_altitude_m = b2_alt,
@@ -336,6 +370,14 @@ extern "C" void app_main(void)
                      flight_controller.current_altitude_m,
                      flight_controller.chute_deployed ? 1u : 0u,
                      flight_controller.reef_deployed ? 1u : 0u);
+
+            if (lora_ready)
+            {
+                char phase_msg[128];
+                int written = snprintf(phase_msg, sizeof(phase_msg), "PHASE=%s,ALT=%.2f", flight_state_name(current_phase), flight_controller.current_altitude_m);
+                if (written > 0 && (size_t)written < sizeof(phase_msg))
+                    lora_send_line(phase_msg);
+            }
         }
 
         if (flight_state_controller_should_fire_chute(&flight_controller))
@@ -357,6 +399,7 @@ extern "C" void app_main(void)
                 {
                     flight_controller.chute_commanded = true;
                     flight_controller.chute_deployed = true;
+                    chute_charge_deadline_ms = get_time_ms() + kChargePulseDurationMs;
                 }
             }
         }
@@ -380,26 +423,33 @@ extern "C" void app_main(void)
                 {
                     flight_controller.reef_commanded = true;
                     flight_controller.reef_deployed = true;
+                    reef_charge_deadline_ms = get_time_ms() + kChargePulseDurationMs;
                 }
             }
         }
 
         if (flight_state_should_send_component_status(&flight_controller))
         {
-            uint32_t now_ms = s.time_ms;
-            if (last_lora_tx_ms == 0 || (uint32_t)(now_ms - last_lora_tx_ms) >= kLoraTxIntervalMs)
+            const uint32_t now_ms = get_time_ms();
+            if (should_send_lora_now(now_ms))
             {
-                send_ground_component_status();
+                if (lora_ready)
+                {
+                    char ground_message[128];
+                    int written = snprintf(ground_message, sizeof(ground_message), "I'M ON THE LAUNCH BASE,ALT=%.2f", flight_controller.current_altitude_m);
+                    if (written > 0 && (size_t)written < sizeof(ground_message))
+                        lora_send_line(ground_message);
+                }
                 last_lora_tx_ms = now_ms;
             }
 
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            vTaskDelay(pdMS_TO_TICKS(kLoraTxIntervalMs > 0u ? kLoraTxIntervalMs : 1000u));
             continue;
         }
 
         if (!flight_state_should_log_and_save(&flight_controller))
         {
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            vTaskDelay(pdMS_TO_TICKS(kLoraTxIntervalMs > 0u ? kLoraTxIntervalMs : 1000u));
             continue;
         }
 
@@ -436,8 +486,8 @@ extern "C" void app_main(void)
 
         if (saved && lora_ready && line_ok)
         {
-            uint32_t now_ms = s.time_ms;
-            if (last_lora_tx_ms == 0 || (uint32_t)(now_ms - last_lora_tx_ms) >= kLoraTxIntervalMs)
+            const uint32_t now_ms = get_time_ms();
+            if (should_send_lora_now(now_ms))
             {
                 if (kTelemetryTxMode == TX_MODE_STRUCT)
                 {
@@ -453,6 +503,6 @@ extern "C" void app_main(void)
             }
         }
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(kLoraTxIntervalMs > 0u ? kLoraTxIntervalMs : 1000u));
     }
 }

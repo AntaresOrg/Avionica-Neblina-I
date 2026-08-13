@@ -10,6 +10,7 @@ extern "C" {
 #endif
 
 typedef struct {
+    bool always_high;
     gpio_num_t reef_gpio;
     gpio_num_t chute_gpio;
 } charges_config_t;
