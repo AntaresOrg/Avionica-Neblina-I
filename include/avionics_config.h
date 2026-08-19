@@ -68,7 +68,7 @@ static constexpr flash_memory_config_t kFlashConfig = {
 
 // Output GPIOs for the chute and reef charges.
 static constexpr charges_config_t kChargesConfig = {
-    .always_high = true,
+    .always_high = false,
     .reef_gpio = GPIO_NUM_26,
     .chute_gpio = GPIO_NUM_25,
 };
