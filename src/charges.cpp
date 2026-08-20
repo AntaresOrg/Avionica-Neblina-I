@@ -1,6 +1,9 @@
 #include "charges.h"
 
 #include <stdint.h>
+#include "esp_log.h"
+
+static const char *TAG = "CHARGES";
 
 static charges_config_t s_cfg = {
     .reef_gpio = GPIO_NUM_NC,
@@ -38,7 +41,15 @@ static esp_err_t charges_set_pin(gpio_num_t pin, bool enabled)
     if (!charges_gpio_is_valid(pin))
         return ESP_ERR_INVALID_ARG;
 
-    return gpio_set_level(pin, (s_always_high || enabled) ? 1 : 0);
+    const bool level = (s_always_high || enabled) ? true : false;
+    ESP_LOGI(TAG,
+             "charges_set_pin pin=%d enabled=%d always_high=%d -> gpio_level=%d",
+             pin,
+             enabled ? 1 : 0,
+             s_always_high ? 1 : 0,
+             level ? 1 : 0);
+
+    return gpio_set_level(pin, level ? 1 : 0);
 }
 
 esp_err_t charges_init(const charges_config_t *cfg)

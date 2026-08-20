@@ -27,11 +27,11 @@ static constexpr bool kResetFlightLogBeforeLogging = false;
 // Period between LoRa telemetry transmissions in milliseconds.
 static constexpr uint32_t kLoraTxIntervalMs = 500u;
 // When true, keep the avionics in FLIGHT mode only for debug and ignore altitude-based transitions.
-static constexpr bool kDebugFlightModeOnly = true;
+static constexpr bool kDebugFlightModeOnly = false;
 
 // Flight-state altitude thresholds in meters, based on BMP280 relative altitude.
 static constexpr float kAltitudeOffsetM = 10.0f;
-static constexpr float kReefAltitudeM = 150.0f;
+static constexpr float kReefAltitudeM = 30.0f;
 static constexpr float kGroundAltitudeM = 5.0f;
 
 // Telemetry packet format sent over LoRa.
@@ -42,8 +42,6 @@ static constexpr bool kFlightDeploymentArmed = true;
 
 // Launch detection threshold based on the strongest valid MPU6050 magnitude.
 static constexpr float kLaunchAccelThresholdG = 2.0f;
-// How long each charge output stays active HIGH when fired.
-static constexpr uint32_t kChargePulseDurationMs = 250u;
 
 // GPS/Neo-6M UART wiring and parser settings.
 // UART1 TX is kept for completeness; the important receive path is GPS TX -> ESP RX.

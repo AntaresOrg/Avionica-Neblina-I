@@ -68,7 +68,7 @@ flight_state_phase_t flight_state_controller_update(flight_state_controller_t *c
         return controller->phase;
     }
 
-    if (controller->faulted || !controller->armed || !controller->launch_detected)
+    if (controller->faulted || !controller->armed)
     {
         if (altitude_is_valid(current_altitude_m))
             controller->current_altitude_m = current_altitude_m;
@@ -85,6 +85,7 @@ flight_state_phase_t flight_state_controller_update(flight_state_controller_t *c
             current_altitude_m > controller->max_altitude_m)
         {
             controller->max_altitude_m = current_altitude_m;
+            printf("MAX_ALTITUDE=%.2f\n", controller->max_altitude_m);
         }
 
         if (!controller->chute_deployed &&
@@ -134,10 +135,9 @@ bool flight_state_controller_should_fire_chute(const flight_state_controller_t *
         return false;
 
     const bool debug_gate = controller->thresholds.debug_flight_mode_only &&
-                            controller->armed && !controller->faulted && !controller->chute_commanded;
+                            !controller->chute_commanded;
 
-    return controller->armed && !controller->faulted && controller->launch_detected &&
-           ((controller->phase == FLIGHT_STATE_CHUTE) || debug_gate) && !controller->chute_commanded;
+    return ((controller->phase == FLIGHT_STATE_CHUTE) || debug_gate) && !controller->chute_commanded;
 }
 
 bool flight_state_controller_should_fire_reef(const flight_state_controller_t *controller)
@@ -146,11 +146,9 @@ bool flight_state_controller_should_fire_reef(const flight_state_controller_t *c
         return false;
 
     const bool debug_gate = controller->thresholds.debug_flight_mode_only &&
-                            controller->armed && !controller->faulted &&
                             controller->chute_commanded && !controller->reef_commanded;
 
-    return controller->armed && !controller->faulted && controller->launch_detected &&
-           ((controller->phase == FLIGHT_STATE_REEF) || debug_gate) && !controller->reef_commanded;
+    return ((controller->phase == FLIGHT_STATE_REEF) || debug_gate) && !controller->reef_commanded;
 }
 
 bool flight_state_should_log_and_save(const flight_state_controller_t *controller)

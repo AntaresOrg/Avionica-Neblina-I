@@ -27,8 +27,6 @@ static flight_log_t flight_log;
 static flight_state_controller_t flight_controller;
 static uint32_t last_lora_tx_ms = 0;
 static bool telemetry_header_sent = false;
-static uint32_t chute_charge_deadline_ms = 0;
-static uint32_t reef_charge_deadline_ms = 0;
 
 typedef esp_err_t (*charge_set_fn_t)(bool enabled);
 
@@ -44,17 +42,31 @@ static bool should_send_lora_now(uint32_t now_ms)
     return (last_lora_tx_ms == 0u) || ((uint32_t)(now_ms - last_lora_tx_ms) >= kLoraTxIntervalMs);
 }
 
-static void update_charge_outputs(uint32_t now_ms)
+static void log_charge_levels(const char *tag)
 {
-    const bool chute_active = (chute_charge_deadline_ms != 0u) && (now_ms < chute_charge_deadline_ms);
-    const bool reef_active = (reef_charge_deadline_ms != 0u) && (now_ms < reef_charge_deadline_ms);
-
     if (!charges_ready)
     {
-        chute_charge_deadline_ms = 0u;
-        reef_charge_deadline_ms = 0u;
+        ESP_LOGI(TAG, "%s: charge driver not ready", tag ? tag : "CHARGE");
         return;
     }
+
+    const int chute_level = gpio_get_level(kChargesConfig.chute_gpio);
+    const int reef_level = gpio_get_level(kChargesConfig.reef_gpio);
+
+    ESP_LOGI(TAG,
+             "%s: chute=%s reef=%s",
+             tag ? tag : "CHARGE",
+             (chute_level == 1) ? "HIGH" : "LOW",
+             (reef_level == 1) ? "HIGH" : "LOW");
+}
+
+static void update_charge_outputs(void)
+{
+    if (!charges_ready)
+        return;
+
+    const bool chute_active = flight_controller.chute_commanded;
+    const bool reef_active = flight_controller.reef_commanded;
 
     if (!chute_active && !reef_active)
     {
@@ -62,15 +74,8 @@ static void update_charge_outputs(uint32_t now_ms)
         return;
     }
 
-    if (chute_active)
-        (void)charges_set_chute(true);
-    else
-        (void)charges_set_chute(false);
-
-    if (reef_active)
-        (void)charges_set_reef(true);
-    else
-        (void)charges_set_reef(false);
+    (void)charges_set_chute(chute_active);
+    (void)charges_set_reef(reef_active);
 }
 
 static void write_line_serial_and_lora(void *ctx, const char *line)
@@ -169,8 +174,21 @@ static esp_err_t fire_charge_output(charge_set_fn_t set_fn, const char *name)
     if (!set_fn || !name)
         return ESP_ERR_INVALID_ARG;
 
-    ESP_LOGW(TAG, "Firing %s charge", name);
-    return set_fn(true);
+    const bool enabled = true;
+    ESP_LOGW(TAG, "Firing %s charge: enabled=%d", name, enabled ? 1 : 0);
+    esp_err_t err = set_fn(enabled);
+    if (err == ESP_OK)
+    {
+        if (strcmp(name, "chute") == 0)
+            ESP_LOGW(TAG, "CHUTE FIRE: gpio=%d enabled=%d level=%s", kChargesConfig.chute_gpio,
+                     enabled ? 1 : 0,
+                     (gpio_get_level(kChargesConfig.chute_gpio) == 1) ? "HIGH" : "LOW");
+        else if (strcmp(name, "reef") == 0)
+            ESP_LOGW(TAG, "REEF FIRE: gpio=%d enabled=%d level=%s", kChargesConfig.reef_gpio,
+                     enabled ? 1 : 0,
+                     (gpio_get_level(kChargesConfig.reef_gpio) == 1) ? "HIGH" : "LOW");
+    }
+    return err;
 }
 
 /**
@@ -310,8 +328,8 @@ extern "C" void app_main(void)
 
     while (1)
     {
-        const uint32_t loop_now_ms = get_time_ms();
-        update_charge_outputs(loop_now_ms);
+        update_charge_outputs();
+        log_charge_levels("LOOP");
 
         poll_lora_rx();
         gps_loop();
@@ -365,11 +383,13 @@ extern "C" void app_main(void)
         if (current_phase != previous_phase)
         {
             ESP_LOGI(TAG,
-                     "Flight state -> %s (alt=%.2f m, chute=%u, reef=%u)",
+                     "Flight state -> %s (alt=%.2f m, chute=%u, reef=%u, chute_cmd=%u, reef_cmd=%u)",
                      flight_state_name(current_phase),
                      flight_controller.current_altitude_m,
                      flight_controller.chute_deployed ? 1u : 0u,
-                     flight_controller.reef_deployed ? 1u : 0u);
+                     flight_controller.reef_deployed ? 1u : 0u,
+                     flight_controller.chute_commanded ? 1u : 0u,
+                     flight_controller.reef_commanded ? 1u : 0u);
 
             if (lora_ready)
             {
@@ -399,7 +419,6 @@ extern "C" void app_main(void)
                 {
                     flight_controller.chute_commanded = true;
                     flight_controller.chute_deployed = true;
-                    chute_charge_deadline_ms = get_time_ms() + kChargePulseDurationMs;
                 }
             }
         }
@@ -423,7 +442,6 @@ extern "C" void app_main(void)
                 {
                     flight_controller.reef_commanded = true;
                     flight_controller.reef_deployed = true;
-                    reef_charge_deadline_ms = get_time_ms() + kChargePulseDurationMs;
                 }
             }
         }
