@@ -28,7 +28,7 @@ static esp_err_t charges_configure_output(gpio_num_t pin)
     if (err != ESP_OK)
         return err;
 
-    return gpio_set_level(pin, 1);
+    return gpio_set_level(pin, 0);
 }
 
 static esp_err_t charges_set_pin(gpio_num_t pin, bool enabled)

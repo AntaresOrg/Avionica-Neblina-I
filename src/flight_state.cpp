@@ -133,8 +133,11 @@ bool flight_state_controller_should_fire_chute(const flight_state_controller_t *
     if (!controller)
         return false;
 
+    const bool debug_gate = controller->thresholds.debug_flight_mode_only &&
+                            controller->armed && !controller->faulted && !controller->chute_commanded;
+
     return controller->armed && !controller->faulted && controller->launch_detected &&
-           controller->phase == FLIGHT_STATE_CHUTE && !controller->chute_commanded;
+           ((controller->phase == FLIGHT_STATE_CHUTE) || debug_gate) && !controller->chute_commanded;
 }
 
 bool flight_state_controller_should_fire_reef(const flight_state_controller_t *controller)
@@ -142,8 +145,12 @@ bool flight_state_controller_should_fire_reef(const flight_state_controller_t *c
     if (!controller)
         return false;
 
+    const bool debug_gate = controller->thresholds.debug_flight_mode_only &&
+                            controller->armed && !controller->faulted &&
+                            controller->chute_commanded && !controller->reef_commanded;
+
     return controller->armed && !controller->faulted && controller->launch_detected &&
-           controller->phase == FLIGHT_STATE_REEF && !controller->reef_commanded;
+           ((controller->phase == FLIGHT_STATE_REEF) || debug_gate) && !controller->reef_commanded;
 }
 
 bool flight_state_should_log_and_save(const flight_state_controller_t *controller)
