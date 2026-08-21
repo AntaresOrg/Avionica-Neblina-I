@@ -23,6 +23,10 @@ static bool lora_ready = false;
 static bool charges_ready = false;
 static bool gps_ready = false;
 static bool flash_ready = false;
+static float altitude_history[5] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+static size_t altitude_history_index = 0u;
+static float altitude_history_sum = 0.0f;
+static bool altitude_history_initialized = false;
 static flight_log_t flight_log;
 static flight_state_controller_t flight_controller;
 static uint32_t last_lora_tx_ms = 0;
@@ -42,22 +46,31 @@ static bool should_send_lora_now(uint32_t now_ms)
     return (last_lora_tx_ms == 0u) || ((uint32_t)(now_ms - last_lora_tx_ms) >= kLoraTxIntervalMs);
 }
 
-static void log_charge_levels(const char *tag)
+static float moving_average_filter(float new_value,
+                                  float *buffer,
+                                  size_t *index,
+                                  size_t window_size,
+                                  float *sum,
+                                  bool *initialized)
 {
-    if (!charges_ready)
+    if (!isfinite(new_value))
+        return NAN;
+
+    if (!buffer || !index || !sum || !initialized || window_size == 0u)
+        return new_value;
+
+    *sum -= buffer[*index];
+    buffer[*index] = new_value;
+    *sum += new_value;
+    *index = (*index + 1u) % window_size;
+
+    if (!*initialized)
     {
-        ESP_LOGI(TAG, "%s: charge driver not ready", tag ? tag : "CHARGE");
-        return;
+        *initialized = true;
+        return *sum / (float)(*index == 0u ? window_size : *index);
     }
 
-    const int chute_level = gpio_get_level(kChargesConfig.chute_gpio);
-    const int reef_level = gpio_get_level(kChargesConfig.reef_gpio);
-
-    ESP_LOGI(TAG,
-             "%s: chute=%s reef=%s",
-             tag ? tag : "CHARGE",
-             (chute_level == 1) ? "HIGH" : "LOW",
-             (reef_level == 1) ? "HIGH" : "LOW");
+    return *sum / (float)window_size;
 }
 
 static void update_charge_outputs(void)
@@ -124,32 +137,6 @@ static void log_line_serial_only(const char *line)
 
     // Plain UART0 output (serial monitor friendly; no ESP_LOG prefixes).
     printf("%s\n", line);
-}
-
-static avionics_component_status_t get_component_status(void)
-{
-    avionics_component_status_t status = {
-        .lora_ready = lora_ready,
-        .gps_ready = gps_ready,
-        .flash_ready = flash_ready,
-        .bmp1_ready = bmp280_is_initialized(0),
-        .bmp2_ready = bmp280_is_initialized(1),
-        .mpu1_ready = mpu6050_is_initialized(0),
-        .mpu2_ready = mpu6050_is_initialized(1),
-    };
-
-    return status;
-}
-
-static void send_ground_component_status(void)
-{
-    if (!lora_ready)
-        return;
-
-    char line[192];
-    avionics_component_status_t status = get_component_status();
-    if (flight_state_format_component_status(&flight_controller, &status, line, sizeof(line)) == ESP_OK)
-        lora_send_line(line);
 }
 
 static float mpu6050_accel_magnitude_g(const mpu6050_sample_t *sample)
@@ -329,7 +316,6 @@ extern "C" void app_main(void)
     while (1)
     {
         update_charge_outputs();
-        log_charge_levels("LOOP");
 
         poll_lora_rx();
         gps_loop();
@@ -377,6 +363,16 @@ extern "C" void app_main(void)
         float current_altitude_m = flight_state_select_current_altitude(
             s.bmp1_relative_altitude_m,
             s.bmp2_relative_altitude_m);
+
+        float filtered_altitude_m = moving_average_filter(current_altitude_m,
+                                                         altitude_history,
+                                                         &altitude_history_index,
+                                                         5u,
+                                                         &altitude_history_sum,
+                                                         &altitude_history_initialized);
+        if (isfinite(filtered_altitude_m))
+            current_altitude_m = filtered_altitude_m;
+
         flight_state_phase_t previous_phase = flight_controller.phase;
         flight_state_phase_t current_phase = flight_state_controller_update(&flight_controller, current_altitude_m);
 
