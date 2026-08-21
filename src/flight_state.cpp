@@ -24,6 +24,7 @@ void flight_state_controller_init(flight_state_controller_t *controller,
     controller->chute_commanded = false;
     controller->reef_commanded = false;
     controller->max_altitude_m = NAN;
+    controller->max_accel_magnitude_g = NAN;
     controller->current_altitude_m = NAN;
 }
 
@@ -51,6 +52,22 @@ void flight_state_controller_mark_launch_detected(flight_state_controller_t *con
         return;
 
     controller->launch_detected = true;
+}
+
+void flight_state_controller_update_max_accel_magnitude(flight_state_controller_t *controller,
+                                                       float accel_magnitude_g)
+{
+    if (!controller || !isfinite(accel_magnitude_g))
+        return;
+
+    if (!isfinite(controller->max_accel_magnitude_g) ||
+        accel_magnitude_g > controller->max_accel_magnitude_g)
+    {
+        controller->max_accel_magnitude_g = accel_magnitude_g;
+    }
+
+    if (controller->max_accel_magnitude_g >= 2.0f)
+        controller->launch_detected = true;
 }
 
 flight_state_phase_t flight_state_controller_update(flight_state_controller_t *controller,
@@ -104,7 +121,14 @@ flight_state_phase_t flight_state_controller_update(flight_state_controller_t *c
     if (!altitude_is_valid(resolved_altitude_m))
         return controller->phase;
 
-    if (!controller->chute_deployed && resolved_altitude_m < controller->thresholds.ground_altitude_m)
+    const bool satisfies_launch_gate = controller->launch_detected &&
+                                      resolved_altitude_m >= controller->thresholds.ground_altitude_m;
+
+    if (!satisfies_launch_gate)
+    {
+        controller->phase = FLIGHT_STATE_GROUND;
+    }
+    else if (!controller->chute_deployed && resolved_altitude_m < controller->thresholds.ground_altitude_m)
     {
         controller->phase = FLIGHT_STATE_GROUND;
     }

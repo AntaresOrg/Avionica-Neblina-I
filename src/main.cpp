@@ -147,13 +147,18 @@ static float mpu6050_accel_magnitude_g(const mpu6050_sample_t *sample)
     return sqrtf(sample->ax_g * sample->ax_g + sample->ay_g * sample->ay_g + sample->az_g * sample->az_g);
 }
 
-static bool detect_launch_event(const mpu6050_sample_t *m1, const mpu6050_sample_t *m2)
+static float max_accel_magnitude_g(const mpu6050_sample_t *m1, const mpu6050_sample_t *m2)
 {
     const float mag1 = mpu6050_accel_magnitude_g(m1);
     const float mag2 = mpu6050_accel_magnitude_g(m2);
 
-    return (isfinite(mag1) && mag1 >= kLaunchAccelThresholdG) ||
-           (isfinite(mag2) && mag2 >= kLaunchAccelThresholdG);
+    float max_mag = NAN;
+    if (isfinite(mag1))
+        max_mag = mag1;
+    if (isfinite(mag2) && (!isfinite(max_mag) || mag2 > max_mag))
+        max_mag = mag2;
+
+    return max_mag;
 }
 
 static esp_err_t fire_charge_output(charge_set_fn_t set_fn, const char *name)
@@ -327,8 +332,13 @@ extern "C" void app_main(void)
         mpu6050_read_all(&m1, &m2);
         bmp280_read_all(&b1_alt, &b2_alt);
 
-        if (detect_launch_event(&m1, &m2))
-            flight_state_controller_mark_launch_detected(&flight_controller);
+        const float max_accel_mag = max_accel_magnitude_g(&m1, &m2);
+        if (isfinite(max_accel_mag))
+        {
+            flight_state_controller_update_max_accel_magnitude(&flight_controller, max_accel_mag);
+            if (flight_controller.max_accel_magnitude_g >= kLaunchAccelThresholdG)
+                flight_state_controller_mark_launch_detected(&flight_controller);
+        }
 
         // Always build a timestamped sample, even if sensors failed.
         // Missing values are stored/logged as NAN.

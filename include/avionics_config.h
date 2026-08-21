@@ -25,14 +25,14 @@ static constexpr bool kFlashReadbackMode = false;
 // When booting for normal logging, reset the flight log before appending new data.
 static constexpr bool kResetFlightLogBeforeLogging = false;
 // Period between LoRa telemetry transmissions in milliseconds.
-static constexpr uint32_t kLoraTxIntervalMs = 500u;
+static constexpr uint32_t kLoraTxIntervalMs = 100u;
 // When true, keep the avionics in FLIGHT mode only for debug and ignore altitude-based transitions.
 static constexpr bool kDebugFlightModeOnly = false;
 
 // Flight-state altitude thresholds in meters, based on BMP280 relative altitude.
-static constexpr float kAltitudeOffsetM = 10.0f;
-static constexpr float kReefAltitudeM = 30.0f;
-static constexpr float kGroundAltitudeM = 5.0f;
+static constexpr float kAltitudeOffsetM = 5.0f;
+static constexpr float kReefAltitudeM = 400.0f;
+static constexpr float kGroundAltitudeM = 10.0f;
 
 // Telemetry packet format sent over LoRa.
 static constexpr telemetry_tx_mode_t kTelemetryTxMode = TX_MODE_CSV;

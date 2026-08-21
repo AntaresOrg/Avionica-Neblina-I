@@ -45,6 +45,7 @@ typedef struct {
     bool chute_commanded;
     bool reef_commanded;
     float max_altitude_m;
+    float max_accel_magnitude_g;
     float current_altitude_m;
 } flight_state_controller_t;
 
@@ -56,6 +57,9 @@ void flight_state_controller_set_armed(flight_state_controller_t *controller, bo
 void flight_state_controller_set_faulted(flight_state_controller_t *controller, bool faulted);
 
 void flight_state_controller_mark_launch_detected(flight_state_controller_t *controller);
+
+void flight_state_controller_update_max_accel_magnitude(flight_state_controller_t *controller,
+                                                       float accel_magnitude_g);
 
 flight_state_phase_t flight_state_controller_update(flight_state_controller_t *controller,
                                                     float current_altitude_m);
